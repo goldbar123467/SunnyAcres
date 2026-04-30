@@ -86,9 +86,9 @@ Seasons are **globally synchronized** in **UTC**. There is one canonical season 
   - A small catch-up cash grant scaled to elapsed season time keeps them competitive without dominating.
 - **Day 0 (00:00 UTC of start day):** all players seeded with equal starting cash, identical empty farm, fresh book. Event schedule for the season is generated server-side from a per-season seed.
 - **Day 1–13:** real-time play, wall clock. Production timers and event windows are absolute UTC timestamps so it doesn't matter when a player logs in or how often.
-- **Day 14 (00:00 UTC of end day):** market freezes. Open orders cancel and refund escrow. Inventories liquidated at last-trade price (with an NPC floor for illiquid items). Final net worth written to `leaderboards`. Season archived.
+- **Day 14 (00:00 UTC of end day):** market freezes. Open orders cancel and refund escrow. Inventories liquidated at last-trade price (with a static per-item floor for items that never traded). Final net worth written to `leaderboards`. Season archived.
 - **Reset (same instant):** new season opens, global reshuffle runs, everyone joins their new room.
-- **Bots only when needed:** if a room has fewer than 4 humans, NPC market-maker bots are added to keep the book functional. Above that threshold, no bots — pure human-vs-human.
+- **Humans only.** No AI / NPC players in scope. A room with 1 player simply has a sparse book until more humans join; that's accepted as part of early-stage seasons.
 
 ---
 
@@ -98,11 +98,11 @@ Designed so the same strategy never wins twice. Each season picks a subset.
 
 - **Blight:** target crop dies in plots, supply spikes scarce → price up.
 - **Bumper crop:** target crop grows 2× speed for N hours → glut → price down.
-- **Festival:** demand for specific cooked good (NPC bots place aggressive buys).
+- **Festival:** demand for specific cooked good (server posts time-limited buy orders at premium prices — a fixed event, not a player agent).
 - **Drought:** all crops slower; water tokens become valuable.
 - **Tax day:** flat % of cash skimmed; encourages staying in inventory.
 - **Trade embargo:** an item halts trading for X hours.
-- **Caravan:** NPC posts a single large buy or sell at off-market price.
+- **Caravan:** the server posts a single large buy or sell at an off-market price (a one-shot event order, not an AI trader).
 - **Reveal:** a future event is announced 24h ahead — info edge.
 
 Events are seeded per season for replayability and fairness.
@@ -145,10 +145,10 @@ Each phase ends with something runnable. The order is built around **getting the
 - Final scoring + leaderboard write.
 - Reconnect: rejoin in-progress season, see your open orders restored from DB.
 
-### Phase 6 — Events & NPC liquidity *(volatility + filler)*
-- Event scheduler with the catalogue above. Effects applied server-side.
-- NPC market-maker bots that quote mild bid/ask spreads on each item to keep the book functional in low-population seasons.
+### Phase 6 — Events *(volatility)*
+- Event scheduler with the catalogue above. Effects applied server-side, generated from a per-season seed for fairness and replayability.
 - Event log visible to players.
+- **No AI traders.** Festival/caravan-style "events that post orders" are fixed server-issued orders, not agents reacting to market state.
 
 ### Phase 7 — Polish & balance *(longevity)*
 - Telemetry on real seasons: price curves, win rates, item utilization.
@@ -175,5 +175,5 @@ Each phase ends with something runnable. The order is built around **getting the
 
 - **Reshuffle skill grouping:** pure random, or lightly MMR-grouped from prior seasons' net worth ranks? Start random; revisit once we have data.
 - **Catch-up grant size for late joiners:** linear in elapsed season time, or capped (e.g. max 50% of starting cash)? Probably capped to discourage waiting strategies.
-- **Settlement price:** last trade, end-of-season VWAP, or NPC buyback at floor? Probably last trade with an NPC floor for illiquid items.
+- **Settlement price:** last trade, end-of-season VWAP, or a fixed floor for items that never traded? Probably last trade with a static per-item floor for illiquid items (still a constant, not an AI buyer).
 - **Public order book vs. partially anonymized:** show counterparties or hide them? Leaning hidden until a trade fills.
