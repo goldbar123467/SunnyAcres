@@ -123,11 +123,13 @@ Each phase has an explicit **exit test**. Don't move on until it passes.
 - `.env.example` for Supabase URL/keys. Cloudflare-tunnel-ready (server binds `0.0.0.0:PORT`, no host header coupling).
 - **Exit test:** `npm run dev` from root brings up an empty client and a stub server; `npm test` runs (zero tests) green; lint passes.
 
-### Phase 1 — Single-player TS port + frozen catalog *(production engine)*
+### Phase 1 — Single-player TS port + frozen catalog + start screen *(production engine + first impression)*
 - Lift items, crops, animals, buildings, recipes from `sunny-acres.html` into `packages/shared` as typed modules and pure functions.
 - **Freeze the v1 tradable item catalog** (6–10 items, with declared starting seed/feed allowances and untradable seed shop prices).
 - Client renders the farm in TS with the same look. localStorage save.
-- **Exit test:** play through one full single-player session (plant → harvest → craft → fulfill order) with no regressions vs. the HTML; catalog frozen and reviewed.
+- **Start screen** (landing): title, pitch line, UTC reset countdown placeholder, sign-up CTA stub (no auth wired yet — that's Phase 3), "How to play" entry.
+- **First-run intro popup sequence** (the 4-step explainer), with "Don't show again" persisted in localStorage.
+- **Exit test:** new browser session lands on start screen; clicking play shows intro popups once; full single-player session (plant → harvest → craft → fulfill order) plays with no regressions vs. the HTML; catalog frozen and reviewed.
 
 ### Phase 2 — Order book engine in `shared` *(the core, headless)*
 - Pure-TS `OrderBook` class: place, cancel, match, snapshot, depth, last-trade.
@@ -141,11 +143,13 @@ Each phase has an explicit **exit test**. Don't move on until it passes.
 - Snapshot + journal pipeline: every intent journaled before broadcast; 30s snapshots; recovery path implemented and tested.
 - **Exit test:** kill the server mid-session; restart; client reconnects and sees identical farm state, identical open orders, no duplicate fills.
 
-### Phase 4 — Order book live in a room *(MVP playable)*
+### Phase 4 — Order book live in a room + tutorial *(MVP playable)*
 - Wire `OrderBook` into the Colyseus room. Intents: `PLACE_ORDER`, `CANCEL_ORDER`. Broadcast top-of-book + recent trades + own orders.
 - Order-book UI: ladder, my orders, my inventory, my cash, trade tape.
 - Order rate limit + min time-in-book enforced server-side.
-- **Exit test:** 8 humans in one hardcoded "season" trading items they actually produced; abuse attempts (self-trade, spam, oversell) all rejected.
+- **Scripted tutorial** runs against a local sandbox (no server connection): plant → harvest → place sell → place buy → scripted fill → cancel → leaderboard glance. Replayable from menu.
+- **Contextual tooltips** wired for first-time-seen UI elements; "seen" flags persisted per account.
+- **Exit test:** brand-new account lands on start screen → completes intro popups → completes tutorial → joins a hardcoded "season" with up to 7 others → places, fills, and cancels orders successfully; abuse attempts (self-trade, spam, oversell) all rejected.
 
 ### Phase 5 — Seasons, matchmaking, AFK, leaderboard *(competitive shape)*
 - Season lifecycle aligned to UTC, 14-day cadence, 00:00 UTC boundaries.
@@ -153,7 +157,10 @@ Each phase has an explicit **exit test**. Don't move on until it passes.
 - 48h AFK rule: seat freed, state preserved, restored on return.
 - Final scoring (cash + inventory at last-trade with per-item floor) → `leaderboards`.
 - Live in-room leaderboard updated on fills.
-- **Exit test:** simulated short-cadence season (e.g. 1h "season" with reset) end-to-end: open → active → settle → close → reshuffle → new season; rosters change; leaderboard frozen for old season; AFK seat-frees observed.
+- **Start-screen integration:** real UTC reset countdown, real current-season-day indicator, real sign-up/log-in flow.
+- **Late-joiner re-orientation banner** (current day, time to settlement, catch-up grant, recent event highlights).
+- **End-of-season screen** with final standings + countdown to next reshuffle.
+- **Exit test:** simulated short-cadence season (e.g. 1h "season" with reset) end-to-end: open → active → settle → close → reshuffle → new season; rosters change; leaderboard frozen for old season; AFK seat-frees observed; late joiner sees re-orientation banner; end-of-season screen shows correct standings.
 
 ### Phase 6 — Global events *(volatility)*
 - Event scheduler runs per-season seed at season open; events fire at fixed UTC timestamps **across every room simultaneously**.
@@ -164,10 +171,10 @@ Each phase has an explicit **exit test**. Don't move on until it passes.
 
 ### Phase 7 — In-room chat, polish, balance *(longevity)*
 - Per-room text chat with rate limit and basic moderation hooks.
-- Tutorial flow (scripted, no bots) covering plant → harvest → place/cancel order.
+- Tutorial polish pass (timings, copy, illustrative thumbnails).
 - Telemetry on real seasons: price curves, win rates, item utilization.
 - Balance pass on production rates, fees, position limits, event severity.
-- **Exit test:** new account can complete tutorial in <10 min; one full real 14-day season runs without manual intervention; balance review writeup committed.
+- **Exit test:** new account completes start screen → intro popups → tutorial → first season join in <10 min; one full real 14-day season runs without manual intervention; balance review writeup committed.
 
 ### Phase 8 (post-v1) — Stretch *(explicitly v2 territory; do not start during v1)*
 - Market / stop / iceberg orders, forward contracts.
@@ -235,7 +242,27 @@ Strategy is shaped by what players can see and say.
 - **Internal time = UTC.** Always. Timers, event windows, season boundaries.
 - **Display = local time** with a visible UTC countdown to next reset on every screen.
 - **Mobile web is supported but not optimized.** Order book ladder collapses gracefully; no native apps.
-- **Onboarding:** first-time players get a short interactive tutorial covering plant → harvest → place order → cancel, runnable any time from the menu. No "practice room" against bots in v1 (would require AI traders, which are out of scope) — tutorial is scripted.
+
+## Start Screen, Intro Popups, Tutorial
+
+The first 60 seconds determine whether a new player understands what they're playing. v1 includes a real onboarding flow, not a TODO.
+
+- **Start screen (pre-auth landing).**
+  - Game title art, one-line pitch ("Farm. Trade. Win the season."), a live **countdown to next UTC reset**, and current-season-day indicator if mid-season.
+  - Primary CTA: **Sign up / Log in** (Supabase auth). Secondary: **How to play** (opens tutorial walkthrough without an account, read-only).
+  - Footer: changelog/version, link to rules, status indicator (server up/down).
+- **First-run intro popups (post-auth, before first lobby join).** A short modal sequence — skippable, but on by default — that establishes:
+  1. *The world resets every 14 days at 00:00 UTC; you'll be reshuffled with new players.*
+  2. *Your farm produces goods. Goods get traded with the 7 other humans in your room.*
+  3. *Highest net worth on day 14 wins. Events along the way will move prices.*
+  4. *Your inputs are seeds and feed; cash and inventory are escrowed when you place orders.*
+  Each popup ≤ 2 sentences + one illustrative thumbnail. "Don't show again" checkbox.
+- **Scripted tutorial.** Interactive, no other players, no bots. Runs against a local sandbox state so it can't pollute the real account.
+  - Steps: plant a crop → wait/skip a timer → harvest → look at the order book → place a sell limit → place a buy limit → see a fill (driven by the script, not an AI) → cancel an order → check leaderboard.
+  - Replayable any time from the menu.
+- **Contextual tooltips in-game.** First time you open the order book, build a building, or see an event banner, a single tooltip explains it. Stored "seen" flags per account. No tooltip ever blocks input.
+- **Re-orientation banner for late joiners.** If you join mid-season, the room shows a banner with: current day, time to settlement, your catch-up grant amount, and a "what's happened" summary (event log highlights). One-time, dismissible.
+- **End-of-season screen.** Final standings, your rank, key stats (best trade, biggest position, total fills), and a countdown to the next season's open and reshuffle.
 
 ## Scope Boundary — v1 vs v2
 
