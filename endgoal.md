@@ -54,7 +54,7 @@ The single-player farm and the multiplayer order book are the *same* game — pr
   - `events` (id, season_id, kind, payload, starts_at, ends_at)
   - `leaderboards` (season_id, player_id, rank, net_worth)
   - RLS: a player reads only their own farm/inventory/orders; `trades`, `events`, public order book aggregates readable by all in-season.
-- **Auth:** Supabase Auth, anonymous to start, upgradable to email.
+- **Auth:** Supabase Auth. **Account required** — sign up before playing. Account identity is what matchmaking groups players by (no anonymous play, no throwaway sessions).
 
 ---
 
@@ -78,10 +78,12 @@ Stretch (post-MVP): market orders proper, stop orders, iceberg orders, a futures
 Seasons are **globally synchronized** in **UTC**. There is one canonical season cadence; everyone in the world is in the same epoch.
 
 - **Cadence:** seasons last exactly **14 days**, starting and ending at **00:00 UTC**. A new season begins the instant the previous one closes — no gap, no overlap.
-- **Reshuffle at every reset:** at each season boundary every active player is **reshuffled into a new room of up to 8**. No one carries a cohort across seasons. Matchmaking is a single global pairing pass at `00:00 UTC` of the start day.
-  - Pool = every player who has logged in within the last N days (tunable, e.g. 14).
-  - Buckets of 8 by registration order / shuffled / lightly skill-grouped (start with random; can add MMR later).
-  - Players who first log in mid-season are dropped into an existing room with a free seat (or a late-join room), but **at the next reset they're re-shuffled with everyone else**.
+- **Reshuffle at every reset:** at each season boundary every account in the active pool is **reshuffled into a new room of up to 8**. No cohort carries across seasons. Matchmaking is a single global pairing pass at `00:00 UTC` of the start day.
+  - Pool = every account that has logged in within the last N days (tunable, e.g. 14).
+  - Buckets of 8 — start with random shuffle, can add light MMR grouping later.
+- **Late joiners (mid-season signups or returners):** dropped into an **existing room that isn't full yet**, in the order they arrive. If every current room is full, a fresh "overflow" room is opened and gets filled by subsequent late joiners until it too has 8.
+  - At the next reset they go back into the global shuffle with everyone else.
+  - A small catch-up cash grant scaled to elapsed season time keeps them competitive without dominating.
 - **Day 0 (00:00 UTC of start day):** all players seeded with equal starting cash, identical empty farm, fresh book. Event schedule for the season is generated server-side from a per-season seed.
 - **Day 1–13:** real-time play, wall clock. Production timers and event windows are absolute UTC timestamps so it doesn't matter when a player logs in or how often.
 - **Day 14 (00:00 UTC of end day):** market freezes. Open orders cancel and refund escrow. Inventories liquidated at last-trade price (with an NPC floor for illiquid items). Final net worth written to `leaderboards`. Season archived.
@@ -171,8 +173,7 @@ Each phase ends with something runnable. The order is built around **getting the
 
 ## Open Questions
 
-- **Late joiners:** drop into an existing in-progress room with a free seat, or sit in a "waiting room" until the next reset? Leaning: drop in, with a small catch-up cash bonus scaled to elapsed time.
 - **Reshuffle skill grouping:** pure random, or lightly MMR-grouped from prior seasons' net worth ranks? Start random; revisit once we have data.
-- **Anonymous accounts at season start:** allow play without email, upgrade later? Probably yes.
+- **Catch-up grant size for late joiners:** linear in elapsed season time, or capped (e.g. max 50% of starting cash)? Probably capped to discourage waiting strategies.
 - **Settlement price:** last trade, end-of-season VWAP, or NPC buyback at floor? Probably last trade with an NPC floor for illiquid items.
 - **Public order book vs. partially anonymized:** show counterparties or hide them? Leaning hidden until a trade fills.
