@@ -96,6 +96,8 @@ Seasons are **globally synchronized** in **UTC**. There is one canonical season 
 
 Designed so the same strategy never wins twice. Each season picks a subset.
 
+**Global, not per-room.** Events fire across **every room simultaneously** at fixed UTC timestamps for the season. Every player in the world experiences the same blight at the same moment. The schedule is generated once at season open from a single per-season seed, written to the `events` table, and broadcast to every room. This creates shared player-base narrative ("remember the day-7 drought?") without per-room RNG variance affecting fairness.
+
 - **Blight:** target crop dies in plots, supply spikes scarce → price up.
 - **Bumper crop:** target crop grows 2× speed for N hours → glut → price down.
 - **Festival:** demand for specific cooked good (server posts time-limited buy orders at premium prices — a fixed event, not a player agent).
