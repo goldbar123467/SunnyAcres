@@ -115,61 +115,152 @@ Events are seeded per season for replayability and fairness.
 
 Each phase ends with something runnable. The order is built around **getting the order book live as fast as possible**, since that's the whole game.
 
+Each phase has an explicit **exit test**. Don't move on until it passes.
+
 ### Phase 0 — Repo scaffold *(setup)*
 - npm workspaces: `apps/client`, `apps/server`, `packages/shared`.
 - TypeScript, ESLint, Prettier, Vitest. Vite for client. tsx for server dev, tsup for builds.
 - `.env.example` for Supabase URL/keys. Cloudflare-tunnel-ready (server binds `0.0.0.0:PORT`, no host header coupling).
+- **Exit test:** `npm run dev` from root brings up an empty client and a stub server; `npm test` runs (zero tests) green; lint passes.
 
-### Phase 1 — Single-player TS port *(production engine)*
+### Phase 1 — Single-player TS port + frozen catalog *(production engine)*
 - Lift items, crops, animals, buildings, recipes from `sunny-acres.html` into `packages/shared` as typed modules and pure functions.
-- Client renders the farm in TS with the same look. localStorage save for now.
-- Goal: zero gameplay regression vs. the HTML.
+- **Freeze the v1 tradable item catalog** (6–10 items, with declared starting seed/feed allowances and untradable seed shop prices).
+- Client renders the farm in TS with the same look. localStorage save.
+- **Exit test:** play through one full single-player session (plant → harvest → craft → fulfill order) with no regressions vs. the HTML; catalog frozen and reviewed.
 
 ### Phase 2 — Order book engine in `shared` *(the core, headless)*
 - Pure-TS `OrderBook` class: place, cancel, match, snapshot, depth, last-trade.
-- Heavy unit tests with Vitest: price-time priority, partial fills, cancellation, escrow accounting.
-- No network, no UI yet. This is the algorithm we'll bet the whole game on, so we test it before we wire it up.
+- Includes self-trade prevention, integer prices/qty, escrow accounting, position limits, taker-fee burn.
+- Property-style tests: cash + inventory + escrow conserved across thousands of randomized intent sequences.
+- **Exit test:** Vitest suite covers price-time priority, partial fills, cancellation, self-trade rejection, position-limit rejection, and conservation; all green; engine has zero network/UI deps.
 
 ### Phase 3 — Server skeleton + Supabase *(plumbing)*
-- Colyseus room, JWT auth via Supabase, basic schemas.
-- Tables: `players`, `seasons`, `season_players`, `farms`, `inventories`, `orders`, `trades`. RLS on private rows.
-- Connect, identify, persist farm state. No trading yet.
+- Colyseus room, JWT auth via Supabase, account-required login flow on client.
+- Tables created with RLS: `players`, `seasons`, `season_players`, `farms`, `inventories`, `orders`, `trades`, `events`, `leaderboards`.
+- Snapshot + journal pipeline: every intent journaled before broadcast; 30s snapshots; recovery path implemented and tested.
+- **Exit test:** kill the server mid-session; restart; client reconnects and sees identical farm state, identical open orders, no duplicate fills.
 
 ### Phase 4 — Order book live in a room *(MVP playable)*
-- Wire `OrderBook` into the Colyseus room. Intents: `PLACE_ORDER`, `CANCEL_ORDER`. Broadcast top-of-book + recent trades.
-- Order-book UI: ladder, my orders, my inventory, my cash.
-- 1–8 players can join a single hardcoded "season," produce on their farm, and trade.
+- Wire `OrderBook` into the Colyseus room. Intents: `PLACE_ORDER`, `CANCEL_ORDER`. Broadcast top-of-book + recent trades + own orders.
+- Order-book UI: ladder, my orders, my inventory, my cash, trade tape.
+- Order rate limit + min time-in-book enforced server-side.
+- **Exit test:** 8 humans in one hardcoded "season" trading items they actually produced; abuse attempts (self-trade, spam, oversell) all rejected.
 
-### Phase 5 — Seasons & matchmaking *(competitive shape)*
-- Season lifecycle aligned to UTC: open → active → settling → closed, on a 14-day cadence with a hard `00:00 UTC` boundary.
-- Global reshuffle pass at each reset: every active player goes into a new room of up to 8.
-- Late joiners drop into an open seat for the current season; rejoined at the next reset.
-- Final scoring + leaderboard write.
-- Reconnect: rejoin in-progress season, see your open orders restored from DB.
+### Phase 5 — Seasons, matchmaking, AFK, leaderboard *(competitive shape)*
+- Season lifecycle aligned to UTC, 14-day cadence, 00:00 UTC boundaries.
+- Global reshuffle pass at each reset; late joiners fill not-yet-full rooms in arrival order.
+- 48h AFK rule: seat freed, state preserved, restored on return.
+- Final scoring (cash + inventory at last-trade with per-item floor) → `leaderboards`.
+- Live in-room leaderboard updated on fills.
+- **Exit test:** simulated short-cadence season (e.g. 1h "season" with reset) end-to-end: open → active → settle → close → reshuffle → new season; rosters change; leaderboard frozen for old season; AFK seat-frees observed.
 
-### Phase 6 — Events *(volatility)*
-- Event scheduler with the catalogue above. Effects applied server-side, generated from a per-season seed for fairness and replayability.
-- Event log visible to players.
-- **No AI traders.** Festival/caravan-style "events that post orders" are fixed server-issued orders, not agents reacting to market state.
+### Phase 6 — Global events *(volatility)*
+- Event scheduler runs per-season seed at season open; events fire at fixed UTC timestamps **across every room simultaneously**.
+- Catalogue: blight, bumper crop, festival, drought, tax day, embargo, caravan, reveal.
+- Event log visible to players; reveal events show upcoming events 24 h ahead.
+- **No AI traders.** Festival/caravan post fixed server-issued orders.
+- **Exit test:** two rooms in the same season see the same event timeline; effects applied identically; tape and event log show synchronized timestamps.
 
-### Phase 7 — Polish & balance *(longevity)*
+### Phase 7 — In-room chat, polish, balance *(longevity)*
+- Per-room text chat with rate limit and basic moderation hooks.
+- Tutorial flow (scripted, no bots) covering plant → harvest → place/cancel order.
 - Telemetry on real seasons: price curves, win rates, item utilization.
 - Balance pass on production rates, fees, position limits, event severity.
-- Cosmetics, achievements, season banners. Optional voice/chat or emotes.
+- **Exit test:** new account can complete tutorial in <10 min; one full real 14-day season runs without manual intervention; balance review writeup committed.
 
-### Phase 8 — Stretch order types & deeper PvP
-- Market / stop / iceberg orders.
-- Forward contracts ("deliver X by day Y").
-- Opt-in friction: sabotage, info-asymmetry events, alliances. Off by default.
+### Phase 8 (post-v1) — Stretch *(explicitly v2 territory; do not start during v1)*
+- Market / stop / iceberg orders, forward contracts.
+- Cosmetics, achievements, cross-season ranks.
+- MMR-grouped reshuffle.
+- Opt-in friction (sabotage, alliances).
+- Horizontal scaling.
 
 ---
 
-## Non-Goals (for now)
+## Economy & Monetary Policy
 
-- Real-money trading or any wagering. In-game coins only.
-- Persistent cross-season wealth (each season is a fresh start; only ranks/cosmetics persist).
-- Mobile-native apps. Web-first, mobile web should still feel okay.
+The room is a closed economy. We pin the rules so balance work in Phase 7 has something to push against.
+
+- **Money sources:** day-0 starting cash (equal for everyone), late-joiner catch-up grant (capped, scaled to elapsed time), event payouts (festival premium fills), tax-day rebates if any. Nothing else mints coins.
+- **Money sinks:** taker fees on every trade, tax-day skim, listing/cancel fees if Phase 7 balance needs them.
+- **Fee destination:** **burned** in v1 — leaves the room economy entirely. Simplest mental model, no "pot" UI to design.
+- **Settlement:** at season end, inventory is marked at last-trade price; items that never traded use a static per-item floor (a constant in code, not an in-game buyer).
+
+## Item Catalog & Inputs
+
+Tradable items are declared in `packages/shared` as typed constants. Phase 1 freezes the v1 catalog before order-book work starts.
+
+- **v1 catalog target:** 6–10 items spanning raw crops, animal products, and crafted goods, drawn directly from `sunny-acres.html`.
+- **Seeds and inputs:**
+  - Each player starts day 0 with a small **seed and feed allowance** so a first plant is possible without trading.
+  - Seeds are **not tradable in v1** — bought from a fixed-price NPC seed shop (constant prices, not an order book). Removes a degree of freedom we don't need yet.
+  - Crafted goods (bread, cheese, …) are tradable; their inputs (wheat, milk) are tradable.
+- **Position limits per item** are static numbers in the catalog, picked in Phase 7 balance pass.
+
+## Anti-Cheat Baseline (v1)
+
+The server is the source of truth; this section names the specific abuses we close before launch.
+
+- **One account = one season seat.** Enforced by `auth_user_id` uniqueness on `season_players`.
+- **Self-trade prevention.** Orders from the same account never match — incoming aggressor against own resting order is rejected at the engine, not the API.
+- **Order rate limit.** Per-account cap (e.g. 10 placements + cancels per second) to kill spoof/spam.
+- **Min time-in-book** (e.g. 250 ms) before a resting order can be cancelled, to deter quote-stuffing.
+- **All intents server-validated.** Cash, inventory, position-limit, and item-existence checks on every `PLACE_ORDER`. Client never authoritative.
+- **Out of v1 scope:** cross-account collusion detection, multi-accounting via separate emails, anti-bot behavioral analysis. Logged as v2.
+
+## Persistence, Crash Recovery, and AFK
+
+A 14-day persistent room must survive Node restarts and idle players without losing state.
+
+- **Snapshot + journal model.**
+  - **Journal:** every accepted intent and every fill is written to Postgres synchronously before the room broadcasts a confirmation. This is the source of truth.
+  - **Snapshot:** full room state (order books, inventories, cash, farms) written every 30 s and on graceful shutdown.
+  - **Recovery:** on server boot, each active room rehydrates from latest snapshot, then replays journal entries since that snapshot.
+- **Persistence granularity:** journal-on-fill is non-negotiable; everything else (production timers, UI state) is snapshot-only.
+- **AFK / inactivity:** if an account is offline for **48 h continuous**, its seat is freed for late joiners. Its farm state, open orders, and inventory are preserved and restored if it returns before the season ends. Open orders **stay live** in the book during AFK — escrow already covers the risk.
+- **Reconnect:** on rejoin, client receives latest snapshot diff for its account plus the public top-of-book; resumes seamlessly.
+
+## Live Information & Communication
+
+Strategy is shaped by what players can see and say.
+
+- **Live leaderboard:** visible in-room during the season, updated on each fill. Net worth = cash + inventory at last-trade price. This is intentional pressure on the leader.
+- **Counterparty privacy:** order book is **anonymous while resting**. After a fill, both sides see who they traded with. (Inside one 8-player room, full anonymity is fragile anyway.)
+- **In-room chat:** simple text channel per room, server-moderated rate-limited. v1 includes chat; emotes/reactions are v2. No cross-room or global chat in v1.
+- **Trade tape:** public log of recent trades (price, qty, time, counterparties post-fill) visible to the room.
+
+## Client UX Notes
+
+- **Internal time = UTC.** Always. Timers, event windows, season boundaries.
+- **Display = local time** with a visible UTC countdown to next reset on every screen.
+- **Mobile web is supported but not optimized.** Order book ladder collapses gracefully; no native apps.
+- **Onboarding:** first-time players get a short interactive tutorial covering plant → harvest → place order → cancel, runnable any time from the menu. No "practice room" against bots in v1 (would require AI traders, which are out of scope) — tutorial is scripted.
+
+## Scope Boundary — v1 vs v2
+
+Locking this so we don't bleed.
+
+**v1 (this `endgoal.md`):**
+- Account, 8-player UTC seasons, reshuffle, late-join fill, server-authoritative limit-order book, escrow, fees, position limits, global events, settlement, leaderboard, in-room chat, snapshot+journal recovery, 48h AFK seat-freeing, anti-cheat baseline above, web client (mobile-okay).
+
+**v2 and later (explicitly NOT v1):**
+- Market / stop / iceberg orders, forward contracts.
+- AI traders or market-maker bots of any kind.
+- Cross-room or global chat, friends list, parties.
+- Persistent cross-season progression (cosmetics, ranks, achievements).
+- MMR / skill-based reshuffle.
+- Sabotage, alliances, info-asymmetry events.
+- Horizontal scaling across multiple Node hosts (single-host first; design lets us add a router later).
+- Native mobile apps, voice chat.
+- Collusion detection, multi-account detection.
+- Real-money anything.
+
+## Non-Goals (forever, not just v1)
+
+- Real-money trading or wagering.
 - Procedural farms — fixed grid is fine.
+- Voice chat.
 
 ---
 
