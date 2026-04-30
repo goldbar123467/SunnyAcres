@@ -1,0 +1,2099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Sunny Acres</title>
+<style>
+  /* ═══════════════════════════════════════════════════════════════════
+     PALETTE & TOKENS — sun-soaked Saturday morning farm
+  ═══════════════════════════════════════════════════════════════════ */
+  :root {
+    --grass:        #7cb342;
+    --grass-light:  #aed581;
+    --grass-dark:   #558b2f;
+    --soil:         #8d6e63;
+    --soil-light:   #a1887f;
+    --soil-dark:    #5d4037;
+    --sky:          #90caf9;
+    --sky-light:    #e3f2fd;
+    --butter:       #fff59d;
+    --butter-deep:  #ffd54f;
+    --peach:        #ffab91;
+    --peach-deep:   #ff8a65;
+    --cream:        #fff8e1;
+    --cream-warm:   #ffecb3;
+    --ink:          #3e2723;
+    --ink-soft:     #6d4c41;
+    --gold:         #f9a825;
+    --rose:         #e57373;
+
+    --shadow-flat:  0 4px 0 rgba(62, 39, 35, 0.18);
+    --shadow-pop:   0 6px 0 rgba(62, 39, 35, 0.22);
+    --shadow-soft:  0 4px 14px rgba(62, 39, 35, 0.10);
+    --shadow-deep:  0 8px 22px rgba(62, 39, 35, 0.18);
+
+    --radius:       14px;
+    --radius-sm:    10px;
+    --radius-lg:    22px;
+    --tile-size:    96px;
+    --animal-size:  82px;
+    --building-size: 92px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { height: 100%; }
+
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    background:
+      radial-gradient(ellipse at 12% 10%, rgba(255, 245, 157, 0.55), transparent 45%),
+      radial-gradient(ellipse at 90% 0%, rgba(255, 213, 79, 0.35), transparent 40%),
+      linear-gradient(180deg, var(--sky-light) 0%, var(--cream) 38%, #e8f5e9 72%, var(--grass-light) 100%);
+    min-height: 100vh;
+    overflow-x: hidden;
+
+    display: grid;
+    grid-template-columns: minmax(640px, 1fr) 380px;
+    grid-template-rows: 64px 1fr;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     SUN — decorative ambient detail in the upper right
+  ═══════════════════════════════════════════════════════════════════ */
+  .sun {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    font-size: 42px;
+    z-index: 0;
+    animation: sun-spin 60s linear infinite, sun-pulse 6s ease-in-out infinite;
+    filter: drop-shadow(0 0 18px rgba(255, 213, 79, 0.6));
+    pointer-events: none;
+  }
+  @keyframes sun-spin { to { transform: rotate(360deg); } }
+  @keyframes sun-pulse { 0%, 100% { filter: drop-shadow(0 0 18px rgba(255, 213, 79, 0.6)); } 50% { filter: drop-shadow(0 0 28px rgba(255, 213, 79, 0.9)); } }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     HEADER
+  ═══════════════════════════════════════════════════════════════════ */
+  header {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    background: linear-gradient(180deg, #ffffff, var(--cream));
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-flat);
+    border: 3px solid var(--ink);
+    display: flex;
+    align-items: center;
+    padding: 0 18px;
+    gap: 18px;
+    position: relative;
+    z-index: 5;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .logo-mark {
+    font-size: 28px;
+    animation: logo-wave 3s ease-in-out infinite;
+    transform-origin: 50% 80%;
+  }
+  @keyframes logo-wave {
+    0%, 100% { transform: rotate(-6deg); }
+    50%      { transform: rotate(6deg); }
+  }
+
+  .header-stats {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    justify-content: flex-end;
+  }
+
+  .stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
+    font-weight: 900;
+  }
+  .stat-icon { font-size: 26px; }
+
+  .coins {
+    background: var(--butter);
+    border: 3px solid var(--ink);
+    border-radius: var(--radius);
+    padding: 6px 14px 6px 10px;
+    box-shadow: var(--shadow-flat);
+    color: var(--ink);
+  }
+  .coins.bumping { animation: coin-bump 320ms cubic-bezier(.34,1.56,.64,1); }
+  @keyframes coin-bump {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.16); }
+    100% { transform: scale(1); }
+  }
+
+  .xp-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 0 1 320px;
+    min-width: 200px;
+  }
+  .level-badge {
+    background: var(--peach);
+    color: var(--ink);
+    border: 3px solid var(--ink);
+    border-radius: 50%;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    box-shadow: var(--shadow-flat);
+    flex-shrink: 0;
+  }
+  .level-badge .lv-label {
+    font-size: 8px;
+    line-height: 1;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft);
+  }
+  .level-badge .lv-num { font-size: 18px; line-height: 1; }
+
+  .xp-bar {
+    flex: 1;
+    height: 18px;
+    background: rgba(0, 0, 0, 0.12);
+    border-radius: 999px;
+    border: 2px solid var(--ink);
+    overflow: hidden;
+    position: relative;
+  }
+  .xp-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--grass-light), var(--grass));
+    border-radius: 999px;
+    transition: width 480ms cubic-bezier(.34,1.56,.64,1);
+    box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.12);
+  }
+  .xp-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 11px;
+    font-weight: 900;
+    color: var(--ink);
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+    letter-spacing: 0.03em;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     LEFT COLUMN — farm + barn + production
+  ═══════════════════════════════════════════════════════════════════ */
+  .left-col {
+    grid-column: 1;
+    grid-row: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .panel {
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(2px);
+    border-radius: var(--radius-lg);
+    border: 3px solid var(--ink);
+    box-shadow: var(--shadow-flat);
+    padding: 14px 16px 16px;
+    position: relative;
+  }
+
+  .panel-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  .panel-title .panel-emoji { font-size: 22px; }
+  .panel-sub {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ink-soft);
+    letter-spacing: 0.06em;
+    margin-left: auto;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  /* — Farm grid — */
+  .farm-grid {
+    display: grid;
+    grid-template-columns: repeat(4, var(--tile-size));
+    grid-template-rows: repeat(4, var(--tile-size));
+    gap: 8px;
+    justify-content: center;
+    padding: 6px 0 4px;
+  }
+
+  .tile {
+    width: var(--tile-size);
+    height: var(--tile-size);
+    border-radius: var(--radius);
+    background:
+      radial-gradient(ellipse at 25% 22%, rgba(255, 255, 255, 0.18), transparent 55%),
+      repeating-linear-gradient(45deg, var(--soil-dark) 0 5px, var(--soil) 5px 10px);
+    box-shadow:
+      inset 0 4px 8px rgba(0, 0, 0, 0.28),
+      inset 0 -3px 0 rgba(255, 255, 255, 0.06),
+      0 2px 0 rgba(0, 0, 0, 0.12);
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.12s ease;
+    user-select: none;
+  }
+  .tile:hover { transform: translateY(-2px) rotate(-0.5deg); }
+  .tile:active { transform: translateY(1px); }
+
+  .tile-sprite {
+    font-size: 56px;
+    line-height: 1;
+    filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.18));
+    transition: transform 0.18s ease;
+    pointer-events: none;
+  }
+  .tile.stage-sprout .tile-sprite     { font-size: 34px; opacity: 0.9; }
+  .tile.stage-growing .tile-sprite    { font-size: 46px; animation: tile-pulse 2.4s ease-in-out infinite; }
+  .tile.stage-growing-late .tile-sprite { font-size: 52px; animation: tile-pulse 1.8s ease-in-out infinite; }
+  .tile.stage-ready                   { background: radial-gradient(ellipse at center, rgba(255, 245, 157, 0.85) 0%, rgba(255, 213, 79, 0.45) 45%, var(--soil) 80%); box-shadow: inset 0 0 0 3px var(--butter-deep), 0 0 18px rgba(255, 213, 79, 0.55), inset 0 4px 8px rgba(0, 0, 0, 0.18); }
+  .tile.stage-ready .tile-sprite      { animation: ready-bounce 1s ease-in-out infinite; }
+
+  @keyframes tile-pulse {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.05); }
+  }
+  @keyframes ready-bounce {
+    0%, 100% { transform: translateY(0) scale(1); }
+    35%      { transform: translateY(-6px) scale(1.06); }
+    70%      { transform: translateY(0) scale(0.96); }
+  }
+
+  .tile-progress {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    bottom: 6px;
+    height: 6px;
+    background: rgba(0, 0, 0, 0.32);
+    border-radius: 999px;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.4);
+  }
+  .tile-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--grass-light), var(--butter-deep));
+    border-radius: 999px;
+    transition: width 220ms linear;
+  }
+
+  .tile-plant-pop {
+    animation: plant-pop 360ms cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes plant-pop {
+    0%   { transform: scale(0.4) rotate(-12deg); }
+    60%  { transform: scale(1.18) rotate(6deg); }
+    100% { transform: scale(1) rotate(0); }
+  }
+
+  /* — Animals row — */
+  .row-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: flex-start;
+    min-height: 96px;
+  }
+
+  .row-empty {
+    flex: 1;
+    text-align: center;
+    color: var(--ink-soft);
+    opacity: 0.7;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 18px 12px;
+    border: 2px dashed rgba(62, 39, 35, 0.22);
+    border-radius: var(--radius);
+    letter-spacing: 0.04em;
+  }
+
+  .pen {
+    width: var(--animal-size);
+    height: var(--animal-size);
+    border-radius: var(--radius);
+    background: linear-gradient(180deg, var(--grass-light), var(--grass));
+    border: 3px solid var(--ink);
+    box-shadow: var(--shadow-flat);
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.12s ease;
+    user-select: none;
+  }
+  .pen:hover { transform: translateY(-2px); }
+  .pen:active { transform: translateY(1px); }
+  .pen.ready  { box-shadow: var(--shadow-flat), 0 0 18px rgba(255, 213, 79, 0.65); border-color: var(--butter-deep); }
+  .pen.ready .pen-sprite { animation: ready-bounce 1s ease-in-out infinite; }
+
+  .pen-sprite {
+    font-size: 48px;
+    line-height: 1;
+    filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.2));
+    pointer-events: none;
+  }
+  .pen-progress {
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    bottom: 4px;
+    height: 5px;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .pen-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #fff59d, var(--butter-deep));
+    border-radius: 999px;
+    transition: width 220ms linear;
+  }
+  .pen-product {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--cream);
+    border: 2px solid var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    box-shadow: var(--shadow-flat);
+    animation: ready-bounce 1.2s ease-in-out infinite;
+  }
+
+  /* — Buildings row — */
+  .build {
+    width: var(--building-size);
+    height: var(--building-size);
+    border-radius: var(--radius);
+    background: linear-gradient(180deg, var(--cream), var(--cream-warm));
+    border: 3px solid var(--ink);
+    box-shadow: var(--shadow-flat);
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.12s ease;
+    user-select: none;
+  }
+  .build:hover { transform: translateY(-2px); }
+  .build:active { transform: translateY(1px); }
+  .build.ready { box-shadow: var(--shadow-flat), 0 0 18px rgba(255, 213, 79, 0.65); border-color: var(--butter-deep); }
+  .build.ready .build-sprite { animation: ready-bounce 1s ease-in-out infinite; }
+
+  .build-sprite {
+    font-size: 52px;
+    line-height: 1;
+    filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.2));
+    pointer-events: none;
+  }
+  .build-progress {
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    bottom: 4px;
+    height: 5px;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .build-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--peach), var(--peach-deep));
+    border-radius: 999px;
+    transition: width 220ms linear;
+  }
+  .build-output {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--cream);
+    border: 2px solid var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    box-shadow: var(--shadow-flat);
+    animation: ready-bounce 1.2s ease-in-out infinite;
+  }
+  .build-start {
+    position: absolute;
+    top: -8px;
+    left: -8px;
+    background: var(--grass);
+    color: white;
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 900;
+    box-shadow: var(--shadow-flat);
+    pointer-events: none;
+  }
+  .build-start.dim { background: var(--soil-light); opacity: 0.55; }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     RIGHT COLUMN — orders + tabs (inventory/shop)
+  ═══════════════════════════════════════════════════════════════════ */
+  .right-col {
+    grid-column: 2;
+    grid-row: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+  }
+
+  .orders-panel {
+    flex: 0 0 auto;
+    max-height: 56%;
+    overflow-y: auto;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(2px);
+    border-radius: var(--radius-lg);
+    border: 3px solid var(--ink);
+    box-shadow: var(--shadow-flat);
+    padding: 12px 14px;
+  }
+
+  .orders-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .orders-empty {
+    text-align: center;
+    color: var(--ink-soft);
+    opacity: 0.65;
+    font-size: 12px;
+    padding: 18px 8px;
+    font-weight: 700;
+  }
+
+  .order-card {
+    background: linear-gradient(180deg, var(--peach), #ffccbc);
+    border: 3px solid var(--ink);
+    border-radius: var(--radius);
+    padding: 8px 10px;
+    box-shadow: var(--shadow-flat);
+    position: relative;
+    animation: truck-slide-in 480ms cubic-bezier(.34,1.56,.64,1) both;
+  }
+  @keyframes truck-slide-in {
+    0%   { transform: translateX(40px); opacity: 0; }
+    100% { transform: translateX(0); opacity: 1; }
+  }
+
+  .order-truck-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .order-truck-emoji { font-size: 26px; filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.2)); }
+  .order-truck-label { font-size: 11px; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); }
+
+  .order-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+  .order-item {
+    background: rgba(255, 255, 255, 0.7);
+    border: 2px solid var(--ink);
+    border-radius: var(--radius-sm);
+    padding: 2px 6px 2px 4px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 13px;
+    font-weight: 900;
+  }
+  .order-item.have   { background: #c8e6c9; }
+  .order-item.short  { background: #ffcdd2; }
+  .order-item .em    { font-size: 16px; }
+
+  .order-rewards {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+    font-weight: 900;
+    font-size: 13px;
+  }
+  .order-reward-chip {
+    background: var(--cream);
+    border: 2px solid var(--ink);
+    border-radius: var(--radius-sm);
+    padding: 1px 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .order-actions {
+    display: flex;
+    gap: 6px;
+  }
+  .btn {
+    flex: 1;
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--ink);
+    font-family: inherit;
+    font-weight: 900;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: var(--shadow-flat);
+    transition: transform 0.1s ease;
+    background: white;
+    color: var(--ink);
+  }
+  .btn:hover  { transform: translateY(-1px); }
+  .btn:active { transform: translateY(2px); box-shadow: 0 0 0 rgba(0, 0, 0, 0); }
+  .btn.primary { background: var(--grass); color: white; }
+  .btn.primary:disabled { background: var(--soil-light); color: var(--cream); opacity: 0.7; cursor: not-allowed; }
+  .btn.primary:disabled:hover  { transform: none; }
+  .btn.danger { background: var(--rose); color: white; flex: 0 0 auto; padding: 6px 10px; }
+  .btn.tiny { font-size: 11px; padding: 4px 8px; flex: 0 0 auto; }
+  .btn.warm  { background: var(--butter); }
+  .btn.peach { background: var(--peach); }
+
+  .right-tabs-panel {
+    flex: 1;
+    min-height: 0;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(2px);
+    border-radius: var(--radius-lg);
+    border: 3px solid var(--ink);
+    box-shadow: var(--shadow-flat);
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .tab {
+    flex: 1;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--ink);
+    background: var(--cream);
+    color: var(--ink);
+    font-family: inherit;
+    font-weight: 900;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: var(--shadow-flat);
+    transition: transform 0.1s ease;
+  }
+  .tab:hover  { transform: translateY(-1px); }
+  .tab:active { transform: translateY(1px); }
+  .tab.active { background: var(--butter); color: var(--ink); }
+
+  .tab-content {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+
+  /* — Inventory list — */
+  .inv-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    background: white;
+    border: 2px solid var(--ink);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-flat);
+    margin-bottom: 6px;
+    font-weight: 900;
+  }
+  .inv-row.locked { opacity: 0.45; }
+  .inv-emoji { font-size: 26px; line-height: 1; }
+  .inv-name { font-size: 13px; flex: 1; }
+  .inv-count {
+    background: var(--cream);
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    padding: 1px 8px;
+    font-size: 12px;
+    min-width: 26px;
+    text-align: center;
+  }
+  .inv-price { font-size: 11px; color: var(--ink-soft); margin-right: 6px; }
+
+  /* — Shop list — */
+  .shop-card {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    background: white;
+    border: 2px solid var(--ink);
+    border-radius: var(--radius-sm);
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    box-shadow: var(--shadow-flat);
+  }
+  .shop-card.locked { opacity: 0.55; background: #efebe9; }
+  .shop-emoji { font-size: 36px; line-height: 1; flex: 0 0 auto; }
+  .shop-info { flex: 1; min-width: 0; }
+  .shop-name { font-size: 14px; font-weight: 900; }
+  .shop-desc { font-size: 11px; color: var(--ink-soft); margin-top: 2px; line-height: 1.3; }
+  .shop-cost { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .shop-price {
+    background: var(--butter);
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 12px;
+    font-weight: 900;
+    white-space: nowrap;
+  }
+  .shop-lock {
+    background: var(--rose);
+    color: white;
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 900;
+    white-space: nowrap;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     OVERLAYS — seed picker, tooltip, level-up, confetti, sparkles
+  ═══════════════════════════════════════════════════════════════════ */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(62, 39, 35, 0.45);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    animation: fade-in 200ms ease both;
+  }
+  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+  .modal {
+    background: var(--cream);
+    border: 3px solid var(--ink);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-deep);
+    padding: 18px 20px;
+    max-width: 460px;
+    width: calc(100% - 40px);
+    animation: modal-pop 320ms cubic-bezier(.34,1.56,.64,1) both;
+  }
+  @keyframes modal-pop {
+    0%   { transform: scale(0.6) rotate(-6deg); opacity: 0; }
+    100% { transform: scale(1) rotate(0); opacity: 1; }
+  }
+  .modal-title {
+    font-size: 18px;
+    font-weight: 900;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .seed-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .seed-card {
+    background: white;
+    border: 3px solid var(--ink);
+    border-radius: var(--radius);
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+    box-shadow: var(--shadow-flat);
+    position: relative;
+  }
+  .seed-card:hover { transform: translateY(-2px); background: var(--butter); }
+  .seed-card.locked, .seed-card.unaffordable { opacity: 0.5; cursor: not-allowed; background: #efebe9; }
+  .seed-card.locked:hover, .seed-card.unaffordable:hover { transform: none; background: #efebe9; }
+  .seed-card-em { font-size: 36px; line-height: 1; }
+  .seed-card-name { font-size: 13px; font-weight: 900; margin-top: 4px; }
+  .seed-card-meta { font-size: 11px; color: var(--ink-soft); margin-top: 4px; line-height: 1.3; }
+
+  .tooltip {
+    position: fixed;
+    background: var(--ink);
+    color: white;
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 900;
+    z-index: 200;
+    pointer-events: none;
+    animation: tip-fade 1500ms ease both;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  }
+  @keyframes tip-fade {
+    0%   { opacity: 0; transform: translateY(6px); }
+    15%  { opacity: 1; transform: translateY(0); }
+    80%  { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-8px); }
+  }
+
+  .float-text {
+    position: fixed;
+    font-weight: 900;
+    font-size: 18px;
+    pointer-events: none;
+    z-index: 250;
+    text-shadow: 0 2px 0 rgba(0, 0, 0, 0.25), 0 0 8px rgba(255, 255, 255, 0.4);
+    letter-spacing: -0.01em;
+  }
+
+  .sparkle {
+    position: fixed;
+    pointer-events: none;
+    z-index: 240;
+    font-size: 22px;
+  }
+
+  .confetti-piece {
+    position: fixed;
+    pointer-events: none;
+    z-index: 260;
+    width: 10px;
+    height: 14px;
+    border-radius: 2px;
+  }
+
+  .toast {
+    position: fixed;
+    top: 84px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(180deg, var(--butter), var(--butter-deep));
+    color: var(--ink);
+    border: 3px solid var(--ink);
+    border-radius: var(--radius-lg);
+    padding: 12px 22px;
+    font-size: 16px;
+    font-weight: 900;
+    box-shadow: var(--shadow-deep);
+    z-index: 270;
+    animation: toast-pop 4000ms cubic-bezier(.22,.61,.36,1) both;
+    text-align: center;
+    max-width: 400px;
+    line-height: 1.3;
+  }
+  @keyframes toast-pop {
+    0%   { transform: translate(-50%, -28px) scale(0.6); opacity: 0; }
+    10%  { transform: translate(-50%, 0) scale(1.06); opacity: 1; }
+    16%  { transform: translate(-50%, 0) scale(1); }
+    85%  { transform: translate(-50%, 0) scale(1); opacity: 1; }
+    100% { transform: translate(-50%, -28px) scale(0.9); opacity: 0; }
+  }
+
+  .reset-btn {
+    position: fixed;
+    bottom: 12px;
+    left: 12px;
+    background: rgba(255,255,255,0.6);
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 10px;
+    font-family: inherit;
+    font-weight: 900;
+    color: var(--ink-soft);
+    cursor: pointer;
+    z-index: 50;
+    letter-spacing: 0.06em;
+  }
+  .reset-btn:hover { background: var(--rose); color: white; }
+
+  /* — Mobile fallback — */
+  @media (max-width: 980px) {
+    body {
+      grid-template-columns: 1fr;
+      grid-template-rows: 64px auto auto;
+    }
+    .right-col {
+      grid-column: 1;
+      grid-row: 3;
+      max-height: none;
+    }
+    .left-col {
+      grid-column: 1;
+      grid-row: 2;
+      overflow: visible;
+    }
+    .orders-panel { max-height: none; }
+  }
+
+  /* — Scrollbars — keep them quiet — */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(62, 39, 35, 0.2); border-radius: 999px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(62, 39, 35, 0.4); }
+</style>
+</head>
+<body>
+
+<div class="sun" aria-hidden="true">☀️</div>
+
+<header>
+  <div class="logo">
+    <span class="logo-mark">🌻</span>
+    <span>Sunny Acres</span>
+  </div>
+  <div class="header-stats">
+    <div class="xp-wrap">
+      <div class="level-badge">
+        <span class="lv-label">LV</span>
+        <span class="lv-num" id="hdr-level">1</span>
+      </div>
+      <div class="xp-bar">
+        <div class="xp-bar-fill" id="hdr-xp-fill" style="width: 0%"></div>
+        <div class="xp-text" id="hdr-xp-text">0 / 10 XP</div>
+      </div>
+    </div>
+    <div class="stat coins" id="hdr-coins-wrap">
+      <span class="stat-icon">💰</span>
+      <span id="hdr-coins">50</span>
+    </div>
+  </div>
+</header>
+
+<main class="left-col">
+  <section class="panel" id="farm-panel">
+    <div class="panel-title">
+      <span class="panel-emoji">🌱</span>
+      <span>The Farm</span>
+      <span class="panel-sub">click to plant · click to harvest</span>
+    </div>
+    <div class="farm-grid" id="farm-grid"></div>
+  </section>
+
+  <section class="panel" id="barn-panel">
+    <div class="panel-title">
+      <span class="panel-emoji">🐔</span>
+      <span>Barnyard</span>
+      <span class="panel-sub">collect when ready</span>
+    </div>
+    <div class="row-grid" id="barn-row"></div>
+  </section>
+
+  <section class="panel" id="prod-panel">
+    <div class="panel-title">
+      <span class="panel-emoji">🥖</span>
+      <span>Production</span>
+      <span class="panel-sub">click to start · click to collect</span>
+    </div>
+    <div class="row-grid" id="prod-row"></div>
+  </section>
+</main>
+
+<aside class="right-col">
+  <section class="orders-panel">
+    <div class="panel-title">
+      <span class="panel-emoji">🚚</span>
+      <span>Truck Orders</span>
+      <span class="panel-sub" id="orders-count">0/3</span>
+    </div>
+    <div class="orders-list" id="orders-list"></div>
+  </section>
+
+  <section class="right-tabs-panel">
+    <div class="tabs">
+      <button class="tab" data-tab="inventory">📦 Inventory</button>
+      <button class="tab" data-tab="shop">🏪 Shop</button>
+    </div>
+    <div class="tab-content" id="tab-content"></div>
+  </section>
+</aside>
+
+<button class="reset-btn" id="reset-btn" title="Wipe save and start fresh">↺ Reset Farm</button>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// === CONSTANTS ===
+// ═══════════════════════════════════════════════════════════════════
+
+const SAVE_KEY        = 'farmville_save_v1';
+const SAVE_VERSION    = 1;
+const TRUCK_INTERVAL  = 45000;  // 45s
+const OFFLINE_CAP_MS  = 60 * 60 * 1000; // 1 hour
+const SAVE_DEBOUNCE   = 5000;
+const MAX_ORDERS      = 3;
+
+// — Crops (planted on plots) —
+const CROPS = {
+  wheat:  { id:'wheat',  emoji:'🌾', name:'Wheat',  seedCost: 2,  growTime: 10, yield: 2, sellPrice: 4,  xpOnHarvest: 1,  unlockLevel: 1 },
+  carrot: { id:'carrot', emoji:'🥕', name:'Carrot', seedCost: 5,  growTime: 25, yield: 2, sellPrice: 12, xpOnHarvest: 3,  unlockLevel: 2 },
+  corn:   { id:'corn',   emoji:'🌽', name:'Corn',   seedCost: 10, growTime: 45, yield: 2, sellPrice: 25, xpOnHarvest: 6,  unlockLevel: 3 },
+  tomato: { id:'tomato', emoji:'🍅', name:'Tomato', seedCost: 20, growTime: 90, yield: 2, sellPrice: 55, xpOnHarvest: 12, unlockLevel: 4 }
+};
+
+// — Animals (owned, produce on cooldown) —
+const ANIMALS = {
+  chicken: { id:'chicken', emoji:'🐔', name:'Chicken', cost: 50,  productId:'egg',  cooldown: 30, unlockLevel: 2 },
+  cow:     { id:'cow',     emoji:'🐄', name:'Cow',     cost: 250, productId:'milk', cooldown: 75, unlockLevel: 3 }
+};
+
+// — Buildings (production chains) —
+const BUILDINGS = {
+  bakery: {
+    id:'bakery', emoji:'🥖', name:'Bakery', cost: 150, unlockLevel: 2,
+    recipes: { bread: { id:'bread', input: { wheat: 2 }, outputId:'bread', time: 20, sellPrice: 18, xpOnCraft: 4 } }
+  },
+  dairy: {
+    id:'dairy', emoji:'🧈', name:'Dairy',  cost: 400, unlockLevel: 3,
+    recipes: { butter: { id:'butter', input: { milk: 1 }, outputId:'butter', time: 30, sellPrice: 60, xpOnCraft: 8 } }
+  }
+};
+
+// — Item catalog (every sellable / order-eligible good) —
+const ITEMS = {
+  wheat:  { id:'wheat',  name:'Wheat',  emoji:'🌾', sellPrice: 4,  xpRef: 1 },
+  carrot: { id:'carrot', name:'Carrot', emoji:'🥕', sellPrice: 12, xpRef: 3 },
+  corn:   { id:'corn',   name:'Corn',   emoji:'🌽', sellPrice: 25, xpRef: 6 },
+  tomato: { id:'tomato', name:'Tomato', emoji:'🍅', sellPrice: 55, xpRef: 12 },
+  egg:    { id:'egg',    name:'Egg',    emoji:'🥚', sellPrice: 8,  xpRef: 2 },
+  milk:   { id:'milk',   name:'Milk',   emoji:'🥛', sellPrice: 18, xpRef: 5 },
+  bread:  { id:'bread',  name:'Bread',  emoji:'🍞', sellPrice: 18, xpRef: 4 },
+  butter: { id:'butter', name:'Butter', emoji:'🧈', sellPrice: 60, xpRef: 8 }
+};
+
+// — Order-eligible items by player level (drawn from these for trucks) —
+const ITEM_UNLOCK_LEVEL = {
+  wheat: 1, carrot: 2, egg: 2, bread: 2, corn: 3, milk: 3, butter: 3, tomato: 4
+};
+
+// — Level-up feed-forward unlocks (for toast text) —
+const LEVEL_UNLOCKS = {
+  2: 'Carrots, Chickens, Bakery',
+  3: 'Corn, Cows, Dairy',
+  4: 'Tomatoes',
+  5: 'New trucks pay more',
+  6: 'Bigger orders',
+  7: 'More XP per harvest',
+  8: 'Festive farm flair'
+};
+
+// — XP-to-next-level table —
+function xpToNext(level) {
+  if (level === 1) return 10;
+  if (level === 2) return 30;
+  if (level === 3) return 80;
+  if (level === 4) return 200;
+  return 200 * (level - 3);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// === STATE ===
+// ═══════════════════════════════════════════════════════════════════
+
+let state = null;
+
+// Cached DOM references — populated in init/setup
+let tileEls       = [];
+let animalEls     = [];
+let buildingEls   = [];
+let lastSaveAt    = 0;
+let lastFrameAt   = 0;
+let activeTooltip = null;
+let coinTweenRaf  = null;
+let displayedCoins = 0;
+
+// ═══════════════════════════════════════════════════════════════════
+// === SAVE/LOAD ===
+// ═══════════════════════════════════════════════════════════════════
+
+function freshState() {
+  return {
+    saveVersion:        SAVE_VERSION,
+    coins:              50,
+    xp:                 0,
+    level:              1,
+    inventory: { wheat:0, carrot:0, corn:0, tomato:0, egg:0, milk:0, bread:0, butter:0 },
+    plots:              Array.from({ length: 16 }, () => ({ cropId: null, plantedAt: 0 })),
+    animals:            [],
+    buildings:          [],
+    activeOrders:       [],
+    lastTickAt:         Date.now(),
+    lastTruckSpawnAt:   Date.now(),
+    nextOrderId:        1,
+    activeTab:          'inventory'
+  };
+}
+
+function init() {
+  state = freshState();
+  save();
+}
+
+function save() {
+  state.lastTickAt = Date.now();
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+    lastSaveAt = Date.now();
+  } catch (e) {
+    console.warn('Save failed', e);
+  }
+}
+
+function load() {
+  let raw;
+  try { raw = localStorage.getItem(SAVE_KEY); } catch (e) { raw = null; }
+  if (!raw) { init(); return; }
+  let parsed;
+  try { parsed = JSON.parse(raw); } catch (e) { init(); return; }
+  if (!parsed || parsed.saveVersion !== SAVE_VERSION) { init(); return; }
+
+  // Defensive: fill in any missing fields from a fresh state (forward-compat with same version)
+  const fresh = freshState();
+  for (const k of Object.keys(fresh)) {
+    if (parsed[k] === undefined) parsed[k] = fresh[k];
+  }
+  // Ensure inventory has every known item key
+  for (const itemId of Object.keys(ITEMS)) {
+    if (typeof parsed.inventory[itemId] !== 'number') parsed.inventory[itemId] = 0;
+  }
+  // Ensure plots array is the right length (defensive)
+  while (parsed.plots.length < 16) parsed.plots.push({ cropId: null, plantedAt: 0 });
+  if (parsed.plots.length > 16) parsed.plots.length = 16;
+
+  state = parsed;
+
+  // — Offline catch-up cap: clamp ancient timestamps so the catch-up loop is bounded. —
+  const now = Date.now();
+  if (now - state.lastTickAt > OFFLINE_CAP_MS) {
+    state.lastTickAt = now - OFFLINE_CAP_MS;
+  }
+  if (now - state.lastTruckSpawnAt > OFFLINE_CAP_MS) {
+    state.lastTruckSpawnAt = now - OFFLINE_CAP_MS;
+  }
+  // Plots/animals/buildings derive their state from `now - startedAt`, so they
+  // automatically reflect any elapsed time. The data model caps unclaimed
+  // products at 1 implicitly (no auto-replant on plots; one product flag on
+  // animals/buildings derived from elapsed >= cooldown).
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// === RENDER ===
+// ═══════════════════════════════════════════════════════════════════
+
+function setupDOM() {
+  const grid = document.getElementById('farm-grid');
+  grid.innerHTML = '';
+  tileEls = [];
+  for (let i = 0; i < 16; i++) {
+    const el = document.createElement('div');
+    el.className = 'tile';
+    el.dataset.idx = i;
+    el.dataset.state = '';
+    el.addEventListener('click', () => onTileClick(i));
+    grid.appendChild(el);
+    tileEls.push(el);
+  }
+  // Tab buttons
+  document.querySelectorAll('.tab').forEach(b => {
+    b.addEventListener('click', () => {
+      state.activeTab = b.dataset.tab;
+      document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.tab === state.activeTab));
+      renderTabContent();
+    });
+  });
+  // Reset button
+  document.getElementById('reset-btn').addEventListener('click', () => {
+    if (confirm('Wipe your save and start fresh?')) {
+      try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
+      location.reload();
+    }
+  });
+}
+
+function renderAll() {
+  renderHeader();
+  for (let i = 0; i < 16; i++) renderTile(i);
+  renderBarn();
+  renderProduction();
+  renderOrders();
+  // Mark active tab and render its content
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.tab === state.activeTab));
+  renderTabContent();
+}
+
+function renderHeader() {
+  document.getElementById('hdr-level').textContent = state.level;
+  const need = xpToNext(state.level);
+  const pct = Math.max(0, Math.min(100, (state.xp / need) * 100));
+  document.getElementById('hdr-xp-fill').style.width = pct + '%';
+  document.getElementById('hdr-xp-text').textContent = `${state.xp} / ${need} XP`;
+  // Coins are tween-managed via tweenCoins, but if no tween in flight, snap.
+  if (!coinTweenRaf) {
+    displayedCoins = state.coins;
+    document.getElementById('hdr-coins').textContent = state.coins;
+  }
+}
+
+function tweenCoins(from, to) {
+  if (coinTweenRaf) cancelAnimationFrame(coinTweenRaf);
+  const start = performance.now();
+  const dur = 480;
+  const el = document.getElementById('hdr-coins');
+  const wrap = document.getElementById('hdr-coins-wrap');
+  wrap.classList.remove('bumping');
+  // restart bump
+  void wrap.offsetWidth;
+  wrap.classList.add('bumping');
+  function step(now) {
+    const t = Math.min(1, (now - start) / dur);
+    const eased = 1 - Math.pow(1 - t, 3);
+    const v = Math.round(from + (to - from) * eased);
+    el.textContent = v;
+    displayedCoins = v;
+    if (t < 1) {
+      coinTweenRaf = requestAnimationFrame(step);
+    } else {
+      coinTweenRaf = null;
+      el.textContent = to;
+      displayedCoins = to;
+    }
+  }
+  coinTweenRaf = requestAnimationFrame(step);
+}
+
+function renderTile(idx) {
+  const plot = state.plots[idx];
+  const el = tileEls[idx];
+  if (!el) return;
+  if (!plot.cropId) {
+    if (el.dataset.state !== 'empty') {
+      el.dataset.state = 'empty';
+      el.className = 'tile';
+      el.innerHTML = '';
+    }
+    return;
+  }
+  const crop = CROPS[plot.cropId];
+  const elapsed = (Date.now() - plot.plantedAt) / 1000;
+  const progress = Math.min(elapsed / crop.growTime, 1);
+  let stage;
+  if (progress >= 1)        stage = 'ready';
+  else if (progress >= 0.66) stage = 'growing-late';
+  else if (progress >= 0.33) stage = 'growing';
+  else                       stage = 'sprout';
+
+  const stateKey = plot.cropId + ':' + stage;
+  if (el.dataset.state !== stateKey) {
+    el.dataset.state = stateKey;
+    let emoji;
+    if (stage === 'ready') emoji = crop.emoji;
+    else if (stage === 'growing-late') emoji = '🌿';
+    else if (stage === 'growing') emoji = '🌿';
+    else emoji = '🌱';
+    el.className = `tile tile-planted stage-${stage}`;
+    const progBar = (stage !== 'ready')
+      ? `<div class="tile-progress"><div class="tile-progress-fill"></div></div>`
+      : '';
+    el.innerHTML = `<span class="tile-sprite">${emoji}</span>${progBar}`;
+    if (stage === 'sprout') {
+      // pop animation when first appearing
+      const sp = el.querySelector('.tile-sprite');
+      if (sp) sp.classList.add('tile-plant-pop');
+    }
+  }
+  // Update progress bar fill width inline (no full re-render).
+  if (stage !== 'ready') {
+    const fill = el.querySelector('.tile-progress-fill');
+    if (fill) fill.style.width = (progress * 100).toFixed(1) + '%';
+  }
+}
+
+function renderBarn() {
+  const row = document.getElementById('barn-row');
+  row.innerHTML = '';
+  animalEls = [];
+  if (state.animals.length === 0) {
+    row.innerHTML = '<div class="row-empty">No animals yet — visit the Shop to buy a Chicken (Lv 2).</div>';
+    return;
+  }
+  state.animals.forEach((a, i) => {
+    const el = document.createElement('div');
+    el.className = 'pen';
+    el.dataset.idx = i;
+    el.dataset.state = '';
+    el.addEventListener('click', () => onAnimalClick(i));
+    row.appendChild(el);
+    animalEls.push(el);
+    renderAnimal(i);
+  });
+}
+
+function renderAnimal(idx) {
+  const a = state.animals[idx];
+  const el = animalEls[idx];
+  if (!a || !el) return;
+  const def = ANIMALS[a.id];
+  const elapsed = (Date.now() - a.startedAt) / 1000;
+  const progress = Math.min(elapsed / def.cooldown, 1);
+  const ready = progress >= 1;
+  const stateKey = ready ? 'ready' : 'work';
+  if (el.dataset.state !== stateKey) {
+    el.dataset.state = stateKey;
+    el.classList.toggle('ready', ready);
+    const product = ITEMS[def.productId];
+    el.innerHTML = `
+      <span class="pen-sprite">${def.emoji}</span>
+      ${ready ? `<div class="pen-product">${product.emoji}</div>` : `<div class="pen-progress"><div class="pen-progress-fill"></div></div>`}
+    `;
+  }
+  if (!ready) {
+    const fill = el.querySelector('.pen-progress-fill');
+    if (fill) fill.style.width = (progress * 100).toFixed(1) + '%';
+  }
+}
+
+function renderProduction() {
+  const row = document.getElementById('prod-row');
+  row.innerHTML = '';
+  buildingEls = [];
+  if (state.buildings.length === 0) {
+    row.innerHTML = '<div class="row-empty">No buildings yet — visit the Shop to buy a Bakery (Lv 2).</div>';
+    return;
+  }
+  state.buildings.forEach((b, i) => {
+    const el = document.createElement('div');
+    el.className = 'build';
+    el.dataset.idx = i;
+    el.dataset.state = '';
+    el.addEventListener('click', () => onBuildingClick(i));
+    row.appendChild(el);
+    buildingEls.push(el);
+    renderBuilding(i);
+  });
+}
+
+function renderBuilding(idx) {
+  const b = state.buildings[idx];
+  const el = buildingEls[idx];
+  if (!b || !el) return;
+  const def = BUILDINGS[b.id];
+
+  // Determine state
+  let stateKey, html;
+  if (b.recipeStartedAt && b.currentRecipe) {
+    const recipe = def.recipes[b.currentRecipe];
+    const elapsed = (Date.now() - b.recipeStartedAt) / 1000;
+    const progress = Math.min(elapsed / recipe.time, 1);
+    if (progress >= 1) {
+      stateKey = 'output';
+      const out = ITEMS[recipe.outputId];
+      html = `<span class="build-sprite">${def.emoji}</span><div class="build-output">${out.emoji}</div>`;
+    } else {
+      stateKey = 'work';
+      html = `<span class="build-sprite">${def.emoji}</span><div class="build-progress"><div class="build-progress-fill"></div></div>`;
+    }
+  } else {
+    // Idle
+    const recipeId = Object.keys(def.recipes)[0];
+    const recipe = def.recipes[recipeId];
+    const canStart = canAffordRecipe(recipe);
+    stateKey = canStart ? 'idle-ready' : 'idle-dim';
+    html = `<span class="build-sprite">${def.emoji}</span><div class="build-start ${canStart ? '' : 'dim'}">▶</div>`;
+  }
+  if (el.dataset.state !== stateKey) {
+    el.dataset.state = stateKey;
+    el.classList.toggle('ready', stateKey === 'output');
+    el.innerHTML = html;
+  }
+  // progress fill update (only when 'work')
+  if (stateKey === 'work') {
+    const recipe = def.recipes[b.currentRecipe];
+    const elapsed = (Date.now() - b.recipeStartedAt) / 1000;
+    const progress = Math.min(elapsed / recipe.time, 1);
+    const fill = el.querySelector('.build-progress-fill');
+    if (fill) fill.style.width = (progress * 100).toFixed(1) + '%';
+  }
+}
+
+function canAffordRecipe(recipe) {
+  for (const k of Object.keys(recipe.input)) {
+    if ((state.inventory[k] || 0) < recipe.input[k]) return false;
+  }
+  return true;
+}
+
+function renderOrders() {
+  const list = document.getElementById('orders-list');
+  document.getElementById('orders-count').textContent = `${state.activeOrders.length}/${MAX_ORDERS}`;
+  list.innerHTML = '';
+  if (state.activeOrders.length === 0) {
+    list.innerHTML = '<div class="orders-empty">A truck rolls up every 45 seconds. Stay busy!</div>';
+    return;
+  }
+  state.activeOrders.forEach(order => {
+    const card = document.createElement('div');
+    card.className = 'order-card';
+    const itemsHtml = order.items.map(it => {
+      const def = ITEMS[it.itemId];
+      const have = state.inventory[it.itemId] || 0;
+      const cls = have >= it.qty ? 'have' : 'short';
+      return `<span class="order-item ${cls}"><span class="em">${def.emoji}</span>×${it.qty} <span style="opacity:.6;font-size:11px">(${Math.min(have, it.qty)}/${it.qty})</span></span>`;
+    }).join('');
+    const canFulfill = order.items.every(it => (state.inventory[it.itemId] || 0) >= it.qty);
+    card.innerHTML = `
+      <div class="order-truck-row">
+        <div class="order-truck-emoji">🚚</div>
+        <div class="order-truck-label">Truck Order</div>
+      </div>
+      <div class="order-items">${itemsHtml}</div>
+      <div class="order-rewards">
+        <span class="order-reward-chip">💰 +${order.coinReward}</span>
+        <span class="order-reward-chip">⭐ +${order.xpReward}</span>
+      </div>
+      <div class="order-actions">
+        <button class="btn primary" data-fulfill="${order.id}" ${canFulfill ? '' : 'disabled'}>${canFulfill ? 'Fulfill' : 'Need more'}</button>
+        <button class="btn danger tiny" data-dismiss="${order.id}" title="Dismiss">✕</button>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+  list.querySelectorAll('[data-fulfill]').forEach(b => {
+    b.addEventListener('click', e => fulfillOrder(parseInt(b.dataset.fulfill, 10), b));
+  });
+  list.querySelectorAll('[data-dismiss]').forEach(b => {
+    b.addEventListener('click', e => dismissOrder(parseInt(b.dataset.dismiss, 10)));
+  });
+}
+
+function renderTabContent() {
+  const c = document.getElementById('tab-content');
+  if (state.activeTab === 'shop') renderShop(c);
+  else renderInventory(c);
+}
+
+function renderInventory(container) {
+  const rows = [];
+  // Show items in catalog order; only show items unlocked OR with a count > 0.
+  const order = ['wheat', 'carrot', 'corn', 'tomato', 'egg', 'milk', 'bread', 'butter'];
+  for (const id of order) {
+    const def = ITEMS[id];
+    const unlock = ITEM_UNLOCK_LEVEL[id] || 1;
+    const count = state.inventory[id] || 0;
+    if (state.level < unlock && count === 0) continue;
+    const locked = state.level < unlock;
+    rows.push(`
+      <div class="inv-row ${locked ? 'locked' : ''}">
+        <span class="inv-emoji">${def.emoji}</span>
+        <div style="flex:1;min-width:0">
+          <div class="inv-name">${def.name}</div>
+          <div class="inv-price">Sell: 💰 ${def.sellPrice} ea</div>
+        </div>
+        <span class="inv-count">${count}</span>
+        <button class="btn warm tiny" data-sell="${id}" ${count > 0 ? '' : 'disabled'} style="${count > 0 ? '' : 'opacity:.5;cursor:not-allowed'}">Sell 1</button>
+        <button class="btn peach tiny" data-sellall="${id}" ${count > 0 ? '' : 'disabled'} style="${count > 0 ? '' : 'opacity:.5;cursor:not-allowed'}">All</button>
+      </div>
+    `);
+  }
+  if (rows.length === 0) rows.push('<div class="orders-empty">Harvest something to fill your inventory!</div>');
+  container.innerHTML = rows.join('');
+  container.querySelectorAll('[data-sell]').forEach(b => {
+    b.addEventListener('click', () => sellItem(b.dataset.sell, 1, b));
+  });
+  container.querySelectorAll('[data-sellall]').forEach(b => {
+    b.addEventListener('click', () => sellItem(b.dataset.sellall, state.inventory[b.dataset.sellall] || 0, b));
+  });
+}
+
+function renderShop(container) {
+  const rows = [];
+  // Animals
+  for (const id of Object.keys(ANIMALS)) {
+    const a = ANIMALS[id];
+    const product = ITEMS[a.productId];
+    const locked = state.level < a.unlockLevel;
+    const canAfford = state.coins >= a.cost;
+    const disabled = locked || !canAfford;
+    rows.push(`
+      <div class="shop-card ${locked ? 'locked' : ''}">
+        <div class="shop-emoji">${a.emoji}</div>
+        <div class="shop-info">
+          <div class="shop-name">${a.name}</div>
+          <div class="shop-desc">Produces ${product.emoji} ${product.name} every ${a.cooldown}s</div>
+        </div>
+        <div class="shop-cost">
+          ${locked ? `<div class="shop-lock">🔒 Lv ${a.unlockLevel}</div>` : `<div class="shop-price">💰 ${a.cost}</div>`}
+          <button class="btn primary tiny" data-buy="animal:${id}" ${disabled ? 'disabled' : ''}>${locked ? 'Locked' : 'Buy'}</button>
+        </div>
+      </div>
+    `);
+  }
+  // Buildings
+  for (const id of Object.keys(BUILDINGS)) {
+    const b = BUILDINGS[id];
+    const recipeId = Object.keys(b.recipes)[0];
+    const recipe = b.recipes[recipeId];
+    const out = ITEMS[recipe.outputId];
+    const inputDesc = Object.keys(recipe.input).map(k => `${recipe.input[k]} ${ITEMS[k].emoji}`).join(' + ');
+    const locked = state.level < b.unlockLevel;
+    const canAfford = state.coins >= b.cost;
+    const disabled = locked || !canAfford;
+    rows.push(`
+      <div class="shop-card ${locked ? 'locked' : ''}">
+        <div class="shop-emoji">${b.emoji}</div>
+        <div class="shop-info">
+          <div class="shop-name">${b.name}</div>
+          <div class="shop-desc">${inputDesc} → ${out.emoji} ${out.name} (${recipe.time}s)</div>
+        </div>
+        <div class="shop-cost">
+          ${locked ? `<div class="shop-lock">🔒 Lv ${b.unlockLevel}</div>` : `<div class="shop-price">💰 ${b.cost}</div>`}
+          <button class="btn primary tiny" data-buy="building:${id}" ${disabled ? 'disabled' : ''}>${locked ? 'Locked' : 'Buy'}</button>
+        </div>
+      </div>
+    `);
+  }
+  container.innerHTML = rows.join('');
+  container.querySelectorAll('[data-buy]').forEach(btn => {
+    btn.addEventListener('click', () => buyItem(btn.dataset.buy, btn));
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// === INTERACTIONS ===
+// ═══════════════════════════════════════════════════════════════════
+
+function onTileClick(idx) {
+  const plot = state.plots[idx];
+  if (!plot.cropId) {
+    openSeedPicker(idx);
+    return;
+  }
+  const crop = CROPS[plot.cropId];
+  const elapsed = (Date.now() - plot.plantedAt) / 1000;
+  if (elapsed >= crop.growTime) {
+    harvestPlot(idx);
+  } else {
+    const remaining = Math.ceil(crop.growTime - elapsed);
+    showTooltip(tileEls[idx], `${crop.emoji} ${remaining}s left`);
+  }
+}
+
+function plantCrop(plotIdx, cropId) {
+  const plot = state.plots[plotIdx];
+  if (plot.cropId) return;
+  const crop = CROPS[cropId];
+  if (!crop) return;
+  if (state.level < crop.unlockLevel) return;
+  if (state.coins < crop.seedCost) {
+    showTooltip(tileEls[plotIdx], `Need ${crop.seedCost} 💰`);
+    return;
+  }
+  state.coins -= crop.seedCost;
+  plot.cropId = cropId;
+  plot.plantedAt = Date.now();
+  // Force tile state refresh on next render
+  tileEls[plotIdx].dataset.state = '';
+  renderTile(plotIdx);
+  renderHeader();
+  renderTabContent(); // shop affordability may change
+  save();
+}
+
+function harvestPlot(plotIdx) {
+  const plot = state.plots[plotIdx];
+  if (!plot.cropId) return;
+  const crop = CROPS[plot.cropId];
+  const elapsed = (Date.now() - plot.plantedAt) / 1000;
+  if (elapsed < crop.growTime) return;
+  state.inventory[crop.id] = (state.inventory[crop.id] || 0) + crop.yield;
+  const tileEl = tileEls[plotIdx];
+  spawnSparkles(tileEl, 6);
+  spawnFloatText(tileEl, `+${crop.yield} ${crop.emoji}`, '#558b2f');
+  addXp(crop.xpOnHarvest, tileEl);
+  plot.cropId = null;
+  plot.plantedAt = 0;
+  tileEl.dataset.state = '';
+  renderTile(plotIdx);
+  renderTabContent();
+  renderOrders(); // 'have' chips can change
+  save();
+}
+
+function onAnimalClick(idx) {
+  const a = state.animals[idx];
+  if (!a) return;
+  const def = ANIMALS[a.id];
+  const elapsed = (Date.now() - a.startedAt) / 1000;
+  if (elapsed >= def.cooldown) {
+    collectAnimal(idx);
+  } else {
+    const remaining = Math.ceil(def.cooldown - elapsed);
+    showTooltip(animalEls[idx], `${ITEMS[def.productId].emoji} ${remaining}s`);
+  }
+}
+
+function collectAnimal(animalIdx) {
+  const a = state.animals[animalIdx];
+  if (!a) return;
+  const def = ANIMALS[a.id];
+  const elapsed = (Date.now() - a.startedAt) / 1000;
+  if (elapsed < def.cooldown) return;
+  const product = ITEMS[def.productId];
+  state.inventory[def.productId] = (state.inventory[def.productId] || 0) + 1;
+  a.startedAt = Date.now();
+  const el = animalEls[animalIdx];
+  spawnSparkles(el, 5);
+  spawnFloatText(el, `+1 ${product.emoji}`, '#558b2f');
+  addXp(product.xpRef, el);
+  el.dataset.state = '';
+  renderAnimal(animalIdx);
+  renderTabContent();
+  renderOrders();
+  save();
+}
+
+function onBuildingClick(idx) {
+  const b = state.buildings[idx];
+  if (!b) return;
+  const def = BUILDINGS[b.id];
+
+  if (b.recipeStartedAt && b.currentRecipe) {
+    const recipe = def.recipes[b.currentRecipe];
+    const elapsed = (Date.now() - b.recipeStartedAt) / 1000;
+    if (elapsed >= recipe.time) {
+      collectBuilding(idx);
+    } else {
+      const remaining = Math.ceil(recipe.time - elapsed);
+      showTooltip(buildingEls[idx], `${ITEMS[recipe.outputId].emoji} ${remaining}s`);
+    }
+    return;
+  }
+  // idle — start the only recipe if affordable
+  const recipeId = Object.keys(def.recipes)[0];
+  startBuilding(idx, recipeId);
+}
+
+function startBuilding(buildingIdx, recipeId) {
+  const b = state.buildings[buildingIdx];
+  if (!b || b.recipeStartedAt) return;
+  const def = BUILDINGS[b.id];
+  const recipe = def.recipes[recipeId];
+  if (!recipe) return;
+  if (!canAffordRecipe(recipe)) {
+    const need = Object.keys(recipe.input).map(k => `${recipe.input[k]} ${ITEMS[k].emoji}`).join(' + ');
+    showTooltip(buildingEls[buildingIdx], `Need ${need}`);
+    return;
+  }
+  for (const k of Object.keys(recipe.input)) {
+    state.inventory[k] -= recipe.input[k];
+  }
+  b.currentRecipe = recipeId;
+  b.recipeStartedAt = Date.now();
+  buildingEls[buildingIdx].dataset.state = '';
+  renderBuilding(buildingIdx);
+  renderTabContent();
+  renderOrders();
+  save();
+}
+
+function collectBuilding(buildingIdx) {
+  const b = state.buildings[buildingIdx];
+  if (!b || !b.recipeStartedAt) return;
+  const def = BUILDINGS[b.id];
+  const recipe = def.recipes[b.currentRecipe];
+  const elapsed = (Date.now() - b.recipeStartedAt) / 1000;
+  if (elapsed < recipe.time) return;
+  const out = ITEMS[recipe.outputId];
+  state.inventory[recipe.outputId] = (state.inventory[recipe.outputId] || 0) + 1;
+  const el = buildingEls[buildingIdx];
+  spawnSparkles(el, 6);
+  spawnFloatText(el, `+1 ${out.emoji}`, '#5d4037');
+  addXp(recipe.xpOnCraft, el);
+  b.recipeStartedAt = 0;
+  b.currentRecipe = null;
+  el.dataset.state = '';
+  renderBuilding(buildingIdx);
+  renderTabContent();
+  renderOrders();
+  save();
+}
+
+function buyItem(id, sourceEl) {
+  const [kind, key] = id.split(':');
+  if (kind === 'animal') {
+    const def = ANIMALS[key];
+    if (!def) return;
+    if (state.level < def.unlockLevel) return;
+    if (state.coins < def.cost) {
+      if (sourceEl) showTooltip(sourceEl, `Need ${def.cost} 💰`);
+      return;
+    }
+    state.coins -= def.cost;
+    state.animals.push({ id: key, startedAt: Date.now() });
+    renderBarn();
+    if (sourceEl) {
+      spawnFloatText(sourceEl, `-${def.cost} 💰`, '#b71c1c');
+    }
+  } else if (kind === 'building') {
+    const def = BUILDINGS[key];
+    if (!def) return;
+    if (state.level < def.unlockLevel) return;
+    if (state.coins < def.cost) {
+      if (sourceEl) showTooltip(sourceEl, `Need ${def.cost} 💰`);
+      return;
+    }
+    state.coins -= def.cost;
+    state.buildings.push({ id: key, recipeStartedAt: 0, currentRecipe: null });
+    renderProduction();
+    if (sourceEl) {
+      spawnFloatText(sourceEl, `-${def.cost} 💰`, '#b71c1c');
+    }
+  } else {
+    return;
+  }
+  renderHeader();
+  renderTabContent();
+  save();
+}
+
+function sellItem(itemId, qty, sourceEl) {
+  if (qty <= 0) return;
+  const have = state.inventory[itemId] || 0;
+  if (have <= 0) return;
+  qty = Math.min(qty, have);
+  const def = ITEMS[itemId];
+  const gained = def.sellPrice * qty;
+  state.inventory[itemId] -= qty;
+  addCoins(gained, sourceEl);
+  renderTabContent();
+  renderOrders();
+  save();
+}
+
+function fulfillOrder(orderId, sourceEl) {
+  const order = state.activeOrders.find(o => o.id === orderId);
+  if (!order) return;
+  // Verify
+  for (const it of order.items) {
+    if ((state.inventory[it.itemId] || 0) < it.qty) return;
+  }
+  // Deduct
+  for (const it of order.items) {
+    state.inventory[it.itemId] -= it.qty;
+  }
+  state.activeOrders = state.activeOrders.filter(o => o.id !== orderId);
+  // reward
+  if (sourceEl) {
+    spawnSparkles(sourceEl, 8);
+    spawnFloatText(sourceEl, `+${order.coinReward} 💰`, '#558b2f');
+  }
+  addCoins(order.coinReward, null);
+  addXp(order.xpReward, sourceEl);
+  renderOrders();
+  renderTabContent();
+  save();
+}
+
+function dismissOrder(orderId) {
+  state.activeOrders = state.activeOrders.filter(o => o.id !== orderId);
+  renderOrders();
+  save();
+}
+
+function spawnTruck() {
+  if (state.activeOrders.length >= MAX_ORDERS) return;
+  // Pool of items unlocked at the player's current level
+  const pool = Object.keys(ITEM_UNLOCK_LEVEL).filter(k => state.level >= ITEM_UNLOCK_LEVEL[k]);
+  if (pool.length === 0) return;
+  const numItems = Math.min(pool.length, 1 + Math.floor(Math.random() * Math.min(3, Math.max(1, state.level))));
+  const chosen = [];
+  const poolCopy = [...pool];
+  for (let i = 0; i < numItems && poolCopy.length > 0; i++) {
+    const idx = Math.floor(Math.random() * poolCopy.length);
+    chosen.push(poolCopy.splice(idx, 1)[0]);
+  }
+  const items = chosen.map(itemId => {
+    // Quantity scales loosely with level — small amounts so orders are achievable.
+    const maxQ = Math.min(8, 2 + Math.floor(state.level / 2));
+    const qty = 1 + Math.floor(Math.random() * maxQ);
+    return { itemId, qty };
+  });
+  // reward formula
+  let coinSum = 0, xpSum = 0;
+  for (const it of items) {
+    const def = ITEMS[it.itemId];
+    coinSum += def.sellPrice * it.qty;
+    xpSum   += def.xpRef * it.qty;
+  }
+  const coinReward = Math.ceil(coinSum * 1.4);
+  const xpReward   = Math.ceil(xpSum   * 0.8);
+  const order = {
+    id: state.nextOrderId++,
+    items,
+    coinReward,
+    xpReward,
+    spawnedAt: Date.now()
+  };
+  state.activeOrders.push(order);
+}
+
+function levelUp() {
+  state.level++;
+  spawnConfetti();
+  const unlock = LEVEL_UNLOCKS[state.level] || 'New goodies await!';
+  showToast(`🎉 Level ${state.level}! Unlocked: ${unlock}`);
+  renderHeader();
+  renderBarn();        // empty-state hint may change
+  renderProduction();
+  renderTabContent();  // shop unlocks
+  renderOrders();      // 'short/have' coloring uses level? not directly but safe
+}
+
+function addXp(n, sourceEl) {
+  if (!n || n <= 0) return;
+  state.xp += n;
+  if (sourceEl) spawnFloatText(sourceEl, `+${n} ⭐`, '#f9a825');
+  // possibly multi-level-up if huge gain
+  let didLevel = false;
+  while (state.xp >= xpToNext(state.level)) {
+    state.xp -= xpToNext(state.level);
+    levelUp();
+    didLevel = true;
+  }
+  if (!didLevel) renderHeader();
+}
+
+function addCoins(n, sourceEl) {
+  if (!n) return;
+  // Use displayedCoins directly (it's always a number after boot — 0 is valid).
+  const before = (typeof displayedCoins === 'number') ? displayedCoins : state.coins;
+  state.coins += n;
+  if (state.coins < 0) state.coins = 0;
+  if (sourceEl && n > 0) spawnFloatText(sourceEl, `+${n} 💰`, '#f9a825');
+  if (sourceEl && n < 0) spawnFloatText(sourceEl, `${n} 💰`, '#b71c1c');
+  tweenCoins(before, state.coins);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// === SEED PICKER & TOOLTIP ===
+// ═══════════════════════════════════════════════════════════════════
+
+function openSeedPicker(plotIdx) {
+  closeSeedPicker();
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+  backdrop.id = 'seed-modal';
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  let cards = '';
+  for (const id of Object.keys(CROPS)) {
+    const c = CROPS[id];
+    const locked = state.level < c.unlockLevel;
+    const unaffordable = state.coins < c.seedCost;
+    let cls = 'seed-card';
+    if (locked) cls += ' locked';
+    else if (unaffordable) cls += ' unaffordable';
+    cards += `
+      <div class="${cls}" ${locked ? '' : `data-pick="${id}"`}>
+        <div class="seed-card-em">${c.emoji}</div>
+        <div class="seed-card-name">${c.name}</div>
+        <div class="seed-card-meta">
+          ${locked ? `🔒 Unlocks at Lv ${c.unlockLevel}` : `💰 ${c.seedCost} · ⏱ ${c.growTime}s · +${c.yield}`}
+        </div>
+      </div>
+    `;
+  }
+  modal.innerHTML = `
+    <div class="modal-title">🌱 Plant a seed</div>
+    <div class="seed-grid">${cards}</div>
+    <div style="display:flex;justify-content:flex-end">
+      <button class="btn" id="seed-cancel">Cancel</button>
+    </div>
+  `;
+  backdrop.appendChild(modal);
+  document.body.appendChild(backdrop);
+
+  modal.querySelectorAll('[data-pick]').forEach(card => {
+    card.addEventListener('click', () => {
+      const id = card.dataset.pick;
+      const c = CROPS[id];
+      if (state.level < c.unlockLevel) return;
+      if (state.coins < c.seedCost) {
+        // shake
+        card.animate(
+          [{ transform: 'translateX(0)' }, { transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'translateX(0)' }],
+          { duration: 220 }
+        );
+        return;
+      }
+      closeSeedPicker();
+      plantCrop(plotIdx, id);
+    });
+  });
+  modal.querySelector('#seed-cancel').addEventListener('click', closeSeedPicker);
+  backdrop.addEventListener('click', e => { if (e.target === backdrop) closeSeedPicker(); });
+}
+
+function closeSeedPicker() {
+  const m = document.getElementById('seed-modal');
+  if (m) m.remove();
+}
+
+function showTooltip(el, text) {
+  if (activeTooltip) { activeTooltip.remove(); activeTooltip = null; }
+  const r = el.getBoundingClientRect();
+  const tip = document.createElement('div');
+  tip.className = 'tooltip';
+  tip.textContent = text;
+  document.body.appendChild(tip);
+  // place above element, centered
+  const tipRect = tip.getBoundingClientRect();
+  let left = r.left + r.width / 2 - tipRect.width / 2;
+  let top = r.top - tipRect.height - 8;
+  // clamp into viewport
+  left = Math.max(6, Math.min(window.innerWidth - tipRect.width - 6, left));
+  if (top < 6) top = r.bottom + 8;
+  tip.style.left = left + 'px';
+  tip.style.top  = top + 'px';
+  activeTooltip = tip;
+  setTimeout(() => { if (tip.parentNode) tip.remove(); if (activeTooltip === tip) activeTooltip = null; }, 1500);
+}
+
+function showToast(text) {
+  const old = document.querySelector('.toast');
+  if (old) old.remove();
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = text;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 4100);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// === LOOP ===
+// ═══════════════════════════════════════════════════════════════════
+
+function tick(now) {
+  // Update derived states (re-render only dirty tiles + update progress fills inline).
+  for (let i = 0; i < 16; i++) renderTile(i);
+  for (let i = 0; i < state.animals.length; i++) renderAnimal(i);
+  for (let i = 0; i < state.buildings.length; i++) renderBuilding(i);
+
+  // Truck spawn loop — handles realtime AND offline catchup uniformly.
+  let spawned = false;
+  while (Date.now() - state.lastTruckSpawnAt >= TRUCK_INTERVAL && state.activeOrders.length < MAX_ORDERS) {
+    spawnTruck();
+    state.lastTruckSpawnAt += TRUCK_INTERVAL;
+    spawned = true;
+  }
+  if (spawned) renderOrders();
+
+  // Refresh shop buttons periodically (cheap when only DOM is small).
+  // Done in a low-cadence way: refresh tab content at 1Hz.
+  if (now - lastFrameAt > 1000) {
+    lastFrameAt = now;
+    if (state.activeTab === 'shop') renderTabContent();
+    // Also refresh order Fulfill enabled-state in case inventory changed only via UI
+  }
+
+  // Periodic save
+  if (Date.now() - lastSaveAt > SAVE_DEBOUNCE) {
+    save();
+  }
+
+  state.lastTickAt = Date.now();
+  requestAnimationFrame(tick);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// === JUICE ===
+// ═══════════════════════════════════════════════════════════════════
+
+function spawnSparkles(sourceEl, count) {
+  if (!sourceEl) return;
+  const r = sourceEl.getBoundingClientRect();
+  const cx = r.left + r.width / 2;
+  const cy = r.top + r.height / 2;
+  for (let i = 0; i < count; i++) {
+    const s = document.createElement('span');
+    s.className = 'sparkle';
+    s.textContent = ['✨', '⭐', '🌟'][Math.floor(Math.random() * 3)];
+    s.style.left = (cx - 11) + 'px';
+    s.style.top  = (cy - 11) + 'px';
+    document.body.appendChild(s);
+    const angle = (Math.PI * 2) * (i / count) + Math.random() * 0.6 - 0.3;
+    const dist = 36 + Math.random() * 32;
+    const dx = Math.cos(angle) * dist;
+    const dy = Math.sin(angle) * dist;
+    const anim = s.animate([
+      { transform: 'translate(0,0) scale(0.6) rotate(0)', opacity: 1 },
+      { transform: `translate(${dx}px, ${dy - 14}px) scale(1.2) rotate(${(Math.random() * 200 - 100).toFixed(0)}deg)`, opacity: 1, offset: 0.55 },
+      { transform: `translate(${dx * 1.1}px, ${dy + 12}px) scale(0.4) rotate(${(Math.random() * 360 - 180).toFixed(0)}deg)`, opacity: 0 }
+    ], { duration: 700 + Math.random() * 200, easing: 'cubic-bezier(.22,.61,.36,1)' });
+    anim.onfinish = () => s.remove();
+  }
+}
+
+function spawnFloatText(sourceEl, text, color) {
+  if (!sourceEl) return;
+  const r = sourceEl.getBoundingClientRect();
+  const f = document.createElement('div');
+  f.className = 'float-text';
+  f.textContent = text;
+  f.style.color = color || '#558b2f';
+  document.body.appendChild(f);
+  const fr = f.getBoundingClientRect();
+  const startX = r.left + r.width / 2 - fr.width / 2 + (Math.random() * 20 - 10);
+  const startY = r.top + 4;
+  f.style.left = startX + 'px';
+  f.style.top  = startY + 'px';
+  const anim = f.animate([
+    { transform: 'translateY(0) scale(1)', opacity: 1 },
+    { transform: 'translateY(-22px) scale(1.12)', opacity: 1, offset: 0.4 },
+    { transform: 'translateY(-58px) scale(0.95)', opacity: 0 }
+  ], { duration: 1100, easing: 'cubic-bezier(.22,.61,.36,1)' });
+  anim.onfinish = () => f.remove();
+}
+
+function spawnConfetti() {
+  const colors = ['#f9a825', '#7cb342', '#90caf9', '#e57373', '#ffab91', '#fff59d', '#ce93d8'];
+  for (let i = 0; i < 32; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti-piece';
+    c.style.background = colors[Math.floor(Math.random() * colors.length)];
+    const startX = window.innerWidth / 2 + (Math.random() * 240 - 120);
+    const startY = window.innerHeight / 2 - 80;
+    c.style.left = startX + 'px';
+    c.style.top  = startY + 'px';
+    c.style.width = (6 + Math.random() * 8) + 'px';
+    c.style.height = (10 + Math.random() * 12) + 'px';
+    document.body.appendChild(c);
+    const dx = (Math.random() * 2 - 1) * 320;
+    const dy = 380 + Math.random() * 220;
+    const rot = (Math.random() * 720 - 360);
+    const dur = 1400 + Math.random() * 800;
+    const anim = c.animate([
+      { transform: 'translate(0,0) rotate(0)', opacity: 1 },
+      { transform: `translate(${dx * 0.5}px, ${dy * 0.4}px) rotate(${rot * 0.5}deg)`, opacity: 1, offset: 0.4 },
+      { transform: `translate(${dx}px, ${dy}px) rotate(${rot}deg)`, opacity: 0 }
+    ], { duration: dur, easing: 'cubic-bezier(.22,.61,.36,1)' });
+    anim.onfinish = () => c.remove();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// === BOOT ===
+// ═══════════════════════════════════════════════════════════════════
+
+function boot() {
+  load();
+  setupDOM();
+  // reflect activeTab class
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.tab === state.activeTab));
+  displayedCoins = state.coins;
+  renderAll();
+  // Trigger immediate truck-spawn loop (e.g., first launch) before the rAF tick.
+  let kicked = false;
+  while (Date.now() - state.lastTruckSpawnAt >= TRUCK_INTERVAL && state.activeOrders.length < MAX_ORDERS) {
+    spawnTruck();
+    state.lastTruckSpawnAt += TRUCK_INTERVAL;
+    kicked = true;
+  }
+  if (kicked) renderOrders();
+  // periodic save fallback (in case the rAF loop is throttled in background tabs)
+  setInterval(() => { save(); }, SAVE_DEBOUNCE);
+  // Save on tab close so latest state survives even between rAF beats
+  window.addEventListener('beforeunload', save);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) save();
+  });
+  requestAnimationFrame(tick);
+}
+
+document.addEventListener('DOMContentLoaded', boot);
+</script>
+</body>
+</html>
