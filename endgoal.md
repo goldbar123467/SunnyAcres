@@ -1,6 +1,6 @@
 # Sunny Acres — End Goal
 
-A competitive multiplayer farming-and-trading game in TypeScript. Players are auto-matched into **8-player seasons that run for two weeks**. Each player produces goods on their farm and **trades them on a shared limit-order book** against the other 7 players. Random events shake the market throughout the season. **Whoever has the highest net worth at season end wins.**
+A competitive multiplayer farming-and-trading game in TypeScript. The world runs on **globally synchronized 2-week seasons** aligned to **UTC**. At every reset every active player is reshuffled into a new **room of 8** for the next season. Each player produces goods on their farm and **trades them on a shared limit-order book** against the other 7 players. Random events shake the market throughout the season. **Whoever has the highest net worth at season end wins.**
 
 The current `sunny-acres.html` is the single-player production prototype — its crops/animals/buildings become the supply side of the new economy.
 
@@ -20,7 +20,7 @@ The single-player farm and the multiplayer order book are the *same* game — pr
 ## Pillars
 
 1. **Order book is the heart.** Real bid/ask matching, not a simple list of fixed-price stalls. Other players are the liquidity.
-2. **Two-week competitive seasons.** Hard start, hard end, fresh leaderboard each season. Auto-matched into a server at season open.
+2. **Two-week competitive seasons, globally synchronized in UTC.** Hard start, hard end, fresh leaderboard each season. At every reset every player is reshuffled into a new room of 8.
 3. **Events drive volatility.** Scheduled + random shocks make every season tell a different story.
 4. **Server is authoritative.** Cheating the matching engine, inventory, or clock is impossible from the client.
 5. **Production grounds the economy.** Goods come from farming, not thin air; supply is real and constrained.
@@ -75,11 +75,18 @@ Stretch (post-MVP): market orders proper, stop orders, iceberg orders, a futures
 
 ## Season Lifecycle
 
-- **Matchmaking:** on login, join the next open season. New seasons spin up when one fills (or on a schedule). 1–8 players to start a season; below 8, NPC market-maker bots fill empty seats with mild liquidity (so a 3-player game still has a working book).
-- **Day 0:** all players seeded with equal starting cash, identical empty farm, fresh book.
-- **Day 1–13:** real-time play. Production timers run on wall clock; client can disconnect and reconnect.
-- **Day 14:** market closes. Inventories liquidated at last-trade price (or VWAP) for scoring. Final leaderboard locked into `leaderboards`. Season archived; players can join the next.
-- **Always-on:** at any moment there should be at least one joinable season.
+Seasons are **globally synchronized** in **UTC**. There is one canonical season cadence; everyone in the world is in the same epoch.
+
+- **Cadence:** seasons last exactly **14 days**, starting and ending at **00:00 UTC**. A new season begins the instant the previous one closes — no gap, no overlap.
+- **Reshuffle at every reset:** at each season boundary every active player is **reshuffled into a new room of up to 8**. No one carries a cohort across seasons. Matchmaking is a single global pairing pass at `00:00 UTC` of the start day.
+  - Pool = every player who has logged in within the last N days (tunable, e.g. 14).
+  - Buckets of 8 by registration order / shuffled / lightly skill-grouped (start with random; can add MMR later).
+  - Players who first log in mid-season are dropped into an existing room with a free seat (or a late-join room), but **at the next reset they're re-shuffled with everyone else**.
+- **Day 0 (00:00 UTC of start day):** all players seeded with equal starting cash, identical empty farm, fresh book. Event schedule for the season is generated server-side from a per-season seed.
+- **Day 1–13:** real-time play, wall clock. Production timers and event windows are absolute UTC timestamps so it doesn't matter when a player logs in or how often.
+- **Day 14 (00:00 UTC of end day):** market freezes. Open orders cancel and refund escrow. Inventories liquidated at last-trade price (with an NPC floor for illiquid items). Final net worth written to `leaderboards`. Season archived.
+- **Reset (same instant):** new season opens, global reshuffle runs, everyone joins their new room.
+- **Bots only when needed:** if a room has fewer than 4 humans, NPC market-maker bots are added to keep the book functional. Above that threshold, no bots — pure human-vs-human.
 
 ---
 
@@ -130,8 +137,10 @@ Each phase ends with something runnable. The order is built around **getting the
 - 1–8 players can join a single hardcoded "season," produce on their farm, and trade.
 
 ### Phase 5 — Seasons & matchmaking *(competitive shape)*
-- Season lifecycle: open → active → settling → closed. Auto-create new season when full or on schedule.
-- Auto-match on login. Final scoring + leaderboard write.
+- Season lifecycle aligned to UTC: open → active → settling → closed, on a 14-day cadence with a hard `00:00 UTC` boundary.
+- Global reshuffle pass at each reset: every active player goes into a new room of up to 8.
+- Late joiners drop into an open seat for the current season; rejoined at the next reset.
+- Final scoring + leaderboard write.
 - Reconnect: rejoin in-progress season, see your open orders restored from DB.
 
 ### Phase 6 — Events & NPC liquidity *(volatility + filler)*
@@ -162,8 +171,8 @@ Each phase ends with something runnable. The order is built around **getting the
 
 ## Open Questions
 
-- **Tick rate / time scale:** does a "day" in the 2-week season equal a real day, or do we compress (e.g. 14 in-game days over 14 real days but with shorter production timers)? Leaning real-time = real-time.
+- **Late joiners:** drop into an existing in-progress room with a free seat, or sit in a "waiting room" until the next reset? Leaning: drop in, with a small catch-up cash bonus scaled to elapsed time.
+- **Reshuffle skill grouping:** pure random, or lightly MMR-grouped from prior seasons' net worth ranks? Start random; revisit once we have data.
 - **Anonymous accounts at season start:** allow play without email, upgrade later? Probably yes.
-- **Bot count:** always fill empty seats with bots, or only below a threshold? Leaning: bots only when <4 humans.
 - **Settlement price:** last trade, end-of-season VWAP, or NPC buyback at floor? Probably last trade with an NPC floor for illiquid items.
 - **Public order book vs. partially anonymized:** show counterparties or hide them? Leaning hidden until a trade fills.
